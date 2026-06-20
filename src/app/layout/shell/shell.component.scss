@@ -44,13 +44,17 @@ mat-nav-list h3[matSubheader] {
 }
 
 ::ng-deep .sidenav .mat-mdc-list-item {
-  color: #c7cdd9 !important;
+  color: #fff !important;
   border-radius: 8px;
   margin: 2px 8px;
 }
 
+::ng-deep .sidenav .mdc-list-item__primary-text {
+  color: #fff !important;
+}
+
 ::ng-deep .sidenav .mat-mdc-list-item .mat-icon {
-  color: #98a2b6 !important;
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 
 ::ng-deep .sidenav .mat-mdc-list-item.mdc-list-item--activated {
