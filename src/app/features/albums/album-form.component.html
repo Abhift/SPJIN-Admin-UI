@@ -1,0 +1,82 @@
+<div class="page-container">
+  <app-page-header
+    [title]="editing() ? 'Edit album' : 'New album'"
+    subtitle="Photo gallery"
+  ></app-page-header>
+
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <mat-card class="form-card">
+      <app-localized-input
+        label="Title"
+        formControlName="title"
+        [required]="true"
+        (focusout)="autoSlug()"
+      ></app-localized-input>
+
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Slug</mat-label>
+          <input matInput formControlName="slug" />
+          @if (form.controls.slug.hasError('required')) {
+            <mat-error>Slug is required</mat-error>
+          } @else if (form.controls.slug.hasError('slug')) {
+            <mat-error>Invalid slug</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            @for (s of statuses; track s) {
+              <mat-option [value]="s">{{ s }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <app-localized-input
+        label="Description"
+        formControlName="description"
+        [multiline]="true"
+      ></app-localized-input>
+
+      <app-media-picker label="Cover image" formControlName="coverImageId"></app-media-picker>
+    </mat-card>
+
+    <mat-card class="form-card">
+      <div class="section-head">
+        <h3>Images ({{ images.length }})</h3>
+        <button mat-stroked-button type="button" (click)="addImages()">
+          <mat-icon>add_photo_alternate</mat-icon>
+          Add image
+        </button>
+      </div>
+
+      @if (images.length === 0) {
+        <p class="muted">No images added yet.</p>
+      }
+
+      <div class="image-list" formArrayName="images">
+        @for (row of images.controls; track $index) {
+          <div class="image-row" [formGroupName]="$index">
+            <img class="thumb" [src]="imageUrl($index)" alt="" />
+            <app-localized-input label="Caption" formControlName="caption"></app-localized-input>
+            <button
+              mat-icon-button
+              color="warn"
+              type="button"
+              (click)="removeImage($index)"
+              aria-label="Remove image"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        }
+      </div>
+    </mat-card>
+
+    <div class="card-actions-end actions">
+      <button mat-button type="button" (click)="cancel()">Cancel</button>
+      <button mat-flat-button color="primary" type="submit" [disabled]="saving()">Save album</button>
+    </div>
+  </form>
+</div>

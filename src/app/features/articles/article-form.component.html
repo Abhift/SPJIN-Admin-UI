@@ -1,0 +1,91 @@
+<div class="page-container">
+  <app-page-header
+    [title]="editing() ? 'Edit article' : 'New article'"
+    subtitle="Bilingual long-form content"
+  ></app-page-header>
+
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <mat-card class="form-card">
+      <app-localized-input
+        label="Title"
+        formControlName="title"
+        [required]="true"
+        (focusout)="autoSlug()"
+      ></app-localized-input>
+
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Slug</mat-label>
+          <input matInput formControlName="slug" />
+          @if (form.controls.slug.hasError('required')) {
+            <mat-error>Slug is required</mat-error>
+          } @else if (form.controls.slug.hasError('slug')) {
+            <mat-error>Lowercase letters, numbers and hyphens only</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            @for (s of statuses; track s) {
+              <mat-option [value]="s">{{ s }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Category</mat-label>
+          <mat-select formControlName="categoryId">
+            <mat-option [value]="null">— None —</mat-option>
+            @for (c of categories(); track c.id) {
+              <mat-option [value]="c.id">{{ c.name.en }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <app-localized-input
+        label="Summary"
+        formControlName="summary"
+        [multiline]="true"
+        [rows]="3"
+      ></app-localized-input>
+
+      <app-localized-input
+        label="Content"
+        formControlName="content"
+        [multiline]="true"
+        [rows]="14"
+        [required]="true"
+      ></app-localized-input>
+
+      <app-media-picker label="Featured image" formControlName="featuredImageId"></app-media-picker>
+    </mat-card>
+
+    <mat-accordion class="seo-panel">
+      <mat-expansion-panel formGroupName="seo">
+        <mat-expansion-panel-header>
+          <mat-panel-title>SEO &amp; metadata</mat-panel-title>
+        </mat-expansion-panel-header>
+        <app-localized-input label="Meta title" formControlName="metaTitle"></app-localized-input>
+        <app-localized-input
+          label="Meta description"
+          formControlName="metaDescription"
+          [multiline]="true"
+          [rows]="2"
+        ></app-localized-input>
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Canonical URL</mat-label>
+          <input matInput formControlName="canonicalUrl" />
+        </mat-form-field>
+      </mat-expansion-panel>
+    </mat-accordion>
+
+    <div class="card-actions-end actions">
+      <button mat-button type="button" (click)="cancel()">Cancel</button>
+      <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+        Save article
+      </button>
+    </div>
+  </form>
+</div>

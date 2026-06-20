@@ -1,0 +1,28 @@
+.localized-input {
+  display: block;
+}
+
+.lang-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.field-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.req {
+  color: #b00020;
+}
+
+mat-button-toggle-group {
+  height: 30px;
+}
+
+::ng-deep .lang-bar .mat-button-toggle-button {
+  font-size: 0.75rem;
+}

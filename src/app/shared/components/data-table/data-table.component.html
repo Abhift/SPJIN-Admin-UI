@@ -1,0 +1,47 @@
+<div class="table-wrap">
+  <table mat-table [dataSource]="rows">
+    @for (col of columns; track col.key) {
+      <ng-container [matColumnDef]="col.key">
+        <th mat-header-cell *matHeaderCellDef>{{ col.header }}</th>
+        <td mat-cell *matCellDef="let row">
+          @switch (col.type) {
+            @case ('status') {
+              <app-status-chip [status]="asStatus(col.value(row))"></app-status-chip>
+            }
+            @case ('image') {
+              @if (col.value(row)) {
+                <img class="cell-img" [src]="col.value(row)" alt="" />
+              } @else {
+                <span class="muted">—</span>
+              }
+            }
+            @default {
+              <span>{{ col.value(row) || '—' }}</span>
+            }
+          }
+        </td>
+      </ng-container>
+    }
+
+    @if (actions.length) {
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef class="actions-col"></th>
+        <td mat-cell *matCellDef="let row" class="actions-col">
+          @for (act of visibleActions(row); track act.event) {
+            <button
+              mat-icon-button
+              [color]="act.destructive ? 'warn' : undefined"
+              [matTooltip]="act.label"
+              (click)="emit(act.event, row)"
+            >
+              <mat-icon>{{ act.icon }}</mat-icon>
+            </button>
+          }
+        </td>
+      </ng-container>
+    }
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+  </table>
+</div>

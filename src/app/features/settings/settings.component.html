@@ -1,0 +1,19 @@
+<div class="page-container">
+  <app-page-header title="Settings" subtitle="Global site configuration (contact info, social links, etc.)">
+    <button mat-flat-button color="primary" (click)="create()">
+      <mat-icon>add</mat-icon>
+      New setting
+    </button>
+  </app-page-header>
+
+  @if (!loading() && rows().length === 0) {
+    <app-empty-state icon="settings" message="No settings yet" hint="Add your first setting." />
+  } @else {
+    <app-data-table
+      [columns]="columns"
+      [rows]="rows()"
+      [actions]="actions"
+      (action)="onAction($event)"
+    ></app-data-table>
+  }
+</div>

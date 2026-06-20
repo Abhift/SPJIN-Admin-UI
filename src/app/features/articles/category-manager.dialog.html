@@ -1,0 +1,63 @@
+<h2 mat-dialog-title>Manage categories</h2>
+<mat-dialog-content>
+  <div class="category-layout">
+    <div class="list">
+      @if (categories().length === 0) {
+        <p class="muted">No categories yet.</p>
+      }
+      <mat-list>
+        @for (cat of categories(); track cat.id) {
+          <mat-list-item>
+            <span matListItemTitle>{{ cat.name.en }}</span>
+            <span matListItemLine class="muted">{{ cat.slug }}</span>
+            <button mat-icon-button matListItemMeta (click)="edit(cat)" aria-label="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              matListItemMeta
+              color="warn"
+              (click)="remove(cat)"
+              aria-label="Delete"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-list-item>
+        }
+      </mat-list>
+    </div>
+
+    <form class="editor" [formGroup]="form" (ngSubmit)="save()">
+      <h3>{{ editingId() ? 'Edit category' : 'New category' }}</h3>
+      <app-localized-input
+        label="Name"
+        formControlName="name"
+        [required]="true"
+      ></app-localized-input>
+      <mat-form-field class="full-width" appearance="outline">
+        <mat-label>Slug</mat-label>
+        <input matInput formControlName="slug" />
+        @if (form.controls.slug.hasError('required')) {
+          <mat-error>Slug is required</mat-error>
+        } @else if (form.controls.slug.hasError('slug')) {
+          <mat-error>Invalid slug</mat-error>
+        }
+      </mat-form-field>
+      <app-localized-input
+        label="Description"
+        formControlName="description"
+        [multiline]="true"
+        [rows]="2"
+      ></app-localized-input>
+      <div class="card-actions-end">
+        @if (editingId()) {
+          <button mat-button type="button" (click)="reset()">New</button>
+        }
+        <button mat-flat-button color="primary" type="submit">Save</button>
+      </div>
+    </form>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Close</button>
+</mat-dialog-actions>

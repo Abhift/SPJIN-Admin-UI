@@ -1,0 +1,28 @@
+<div class="page-container">
+  <app-page-header title="Branches" subtitle="Office and centre locations">
+    @if (canWrite) {
+      <button mat-flat-button color="primary" (click)="create()">
+        <mat-icon>add</mat-icon>
+        New branch
+      </button>
+    }
+  </app-page-header>
+
+  @if (!loading() && rows().length === 0) {
+    <app-empty-state icon="location_on" message="No branches yet" hint="Add your first branch." />
+  } @else {
+    <app-data-table
+      [columns]="columns"
+      [rows]="rows()"
+      [actions]="actions"
+      (action)="onAction($event)"
+    ></app-data-table>
+    <mat-paginator
+      [length]="total()"
+      [pageSize]="pageSize()"
+      [pageIndex]="pageIndex()"
+      [pageSizeOptions]="[10, 20, 50]"
+      (page)="onPage($event)"
+    ></mat-paginator>
+  }
+</div>

@@ -1,0 +1,26 @@
+<div class="media-picker">
+  <span class="field-label">{{ label }}</span>
+  <div class="preview" [class.empty]="!asset()">
+    @if (asset()) {
+      @if (isImage()) {
+        <img [src]="asset()!.url" [alt]="asset()!.fileName" />
+      } @else {
+        <div class="file-icon"><mat-icon>description</mat-icon></div>
+      }
+    } @else {
+      <div class="placeholder"><mat-icon>image</mat-icon></div>
+    }
+  </div>
+
+  <div class="controls">
+    <button type="button" mat-stroked-button (click)="open()" [disabled]="disabled">
+      <mat-icon>collections</mat-icon>
+      {{ asset() ? 'Change' : 'Choose' }}
+    </button>
+    @if (asset()) {
+      <button type="button" mat-button color="warn" (click)="clear()" [disabled]="disabled">
+        Remove
+      </button>
+    }
+  </div>
+</div>

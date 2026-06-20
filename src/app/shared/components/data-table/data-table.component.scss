@@ -1,0 +1,22 @@
+table {
+  width: 100%;
+}
+
+th.mat-mdc-header-cell {
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.62);
+}
+
+.cell-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+}
+
+.actions-col {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+}

@@ -1,0 +1,54 @@
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: rgba(25, 118, 210, 0.1);
+  color: #1976d2;
+}
+
+.icon-wrap mat-icon {
+  font-size: 26px;
+  height: 26px;
+  width: 26px;
+}
+
+.stat-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.count {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.label {
+  font-size: 0.9rem;
+  color: rgba(0, 0, 0, 0.6);
+}

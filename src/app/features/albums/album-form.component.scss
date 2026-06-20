@@ -1,0 +1,40 @@
+.form-card {
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.section-head h3 {
+  margin: 0;
+}
+
+.image-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.image-row {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  align-items: center;
+  gap: 16px;
+}
+
+.thumb {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #eceff1;
+}
+
+.actions {
+  margin-top: 8px;
+}

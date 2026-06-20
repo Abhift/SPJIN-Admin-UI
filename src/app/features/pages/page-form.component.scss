@@ -1,0 +1,27 @@
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.section-head h3 {
+  margin: 0;
+}
+
+.section-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.mono {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.85rem;
+}
+
+mat-slide-toggle {
+  margin: 8px 0 16px;
+}

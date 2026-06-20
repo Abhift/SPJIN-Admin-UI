@@ -1,0 +1,95 @@
+<div class="page-container">
+  <app-page-header
+    [title]="editing() ? 'Edit menu' : 'New menu'"
+    subtitle="Navigation menu with nested items"
+  ></app-page-header>
+
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <mat-card class="form-card">
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Key</mat-label>
+          <input matInput formControlName="key" placeholder="e.g. main-nav" />
+          @if (form.controls.key.hasError('required')) {
+            <mat-error>Key is required</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="name" />
+          @if (form.controls.name.hasError('required')) {
+            <mat-error>Name is required</mat-error>
+          }
+        </mat-form-field>
+      </div>
+    </mat-card>
+
+    <mat-card class="form-card">
+      <div class="section-head">
+        <h3>Menu items ({{ items.length }})</h3>
+        <button mat-stroked-button type="button" (click)="addItem()">
+          <mat-icon>add</mat-icon>
+          Add item
+        </button>
+      </div>
+
+      @if (items.length === 0) {
+        <p class="muted">No items yet.</p>
+      }
+
+      <div formArrayName="items" class="items">
+        @for (item of items.controls; track pIndex; let pIndex = $index) {
+          <div class="item" [formGroupName]="pIndex">
+            <div class="item-row">
+              <app-localized-input label="Label" formControlName="label"></app-localized-input>
+              <mat-form-field appearance="outline" class="url-field">
+                <mat-label>URL</mat-label>
+                <input matInput formControlName="url" placeholder="/path or https://..." />
+              </mat-form-field>
+              <button
+                mat-icon-button
+                color="warn"
+                type="button"
+                (click)="removeItem(pIndex)"
+                aria-label="Remove item"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+
+            <div class="children" formArrayName="children">
+              @for (child of childrenOf(pIndex).controls; track cIndex; let cIndex = $index) {
+                <div class="child-row" [formGroupName]="cIndex">
+                  <mat-icon class="child-icon">subdirectory_arrow_right</mat-icon>
+                  <app-localized-input label="Label" formControlName="label"></app-localized-input>
+                  <mat-form-field appearance="outline" class="url-field">
+                    <mat-label>URL</mat-label>
+                    <input matInput formControlName="url" />
+                  </mat-form-field>
+                  <button
+                    mat-icon-button
+                    color="warn"
+                    type="button"
+                    (click)="removeChild(pIndex, cIndex)"
+                    aria-label="Remove sub-item"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              }
+              <button mat-button type="button" (click)="addChild(pIndex)">
+                <mat-icon>add</mat-icon>
+                Add sub-item
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </mat-card>
+
+    <div class="card-actions-end actions">
+      <button mat-button type="button" (click)="cancel()">Cancel</button>
+      <button mat-flat-button color="primary" type="submit" [disabled]="saving()">Save menu</button>
+    </div>
+  </form>
+</div>

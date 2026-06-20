@@ -1,0 +1,17 @@
+<div class="page-container">
+  <app-page-header title="Dashboard" [subtitle]="'Welcome back, ' + email"></app-page-header>
+
+  <div class="stat-grid">
+    @for (stat of stats(); track stat.label) {
+      <mat-card class="stat-card" [routerLink]="stat.route">
+        <div class="icon-wrap">
+          <mat-icon>{{ stat.icon }}</mat-icon>
+        </div>
+        <div class="stat-body">
+          <span class="count">{{ stat.count === null ? '—' : stat.count }}</span>
+          <span class="label">{{ stat.label }}</span>
+        </div>
+      </mat-card>
+    }
+  </div>
+</div>

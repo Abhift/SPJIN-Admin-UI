@@ -1,0 +1,28 @@
+<div class="page-container">
+  <app-page-header title="Books" subtitle="Publications and downloadable books">
+    @if (canWrite) {
+      <button mat-flat-button color="primary" (click)="create()">
+        <mat-icon>add</mat-icon>
+        New book
+      </button>
+    }
+  </app-page-header>
+
+  @if (!loading() && rows().length === 0) {
+    <app-empty-state icon="menu_book" message="No books yet" hint="Add your first book." />
+  } @else {
+    <app-data-table
+      [columns]="columns"
+      [rows]="rows()"
+      [actions]="actions"
+      (action)="onAction($event)"
+    ></app-data-table>
+    <mat-paginator
+      [length]="total()"
+      [pageSize]="pageSize()"
+      [pageIndex]="pageIndex()"
+      [pageSizeOptions]="[10, 20, 50]"
+      (page)="onPage($event)"
+    ></mat-paginator>
+  }
+</div>

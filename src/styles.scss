@@ -1,0 +1,106 @@
+/* Global styles for the SPJIN admin console. */
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+  background: #f4f5f7;
+  color: #1f2430;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+}
+
+/* Snackbar variants */
+.snack-success {
+  --mdc-snackbar-container-color: #1b5e20;
+  --mdc-snackbar-supporting-text-color: #fff;
+  --mat-snack-bar-button-color: #b9f6ca;
+}
+
+.snack-error {
+  --mdc-snackbar-container-color: #b00020;
+  --mdc-snackbar-supporting-text-color: #fff;
+  --mat-snack-bar-button-color: #ffd1d6;
+  white-space: pre-line;
+}
+
+/* Reusable layout helpers */
+.page-container {
+  padding: 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 24px;
+}
+
+.form-grid .full-width {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 720px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+.card-actions-end {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.mat-column-actions {
+  width: 120px;
+  text-align: right;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+table.mat-mdc-table {
+  width: 100%;
+  background: transparent;
+}
+
+.muted {
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.form-card {
+  padding: 24px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.seo-panel {
+  display: block;
+  margin-bottom: 16px;
+}

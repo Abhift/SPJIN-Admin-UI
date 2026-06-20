@@ -1,0 +1,42 @@
+<div class="page-container">
+  <app-page-header title="Media library" subtitle="Images, documents and other uploads">
+    <button mat-flat-button color="primary" (click)="fileInput.click()" [disabled]="uploading()">
+      <mat-icon>upload</mat-icon>
+      Upload
+    </button>
+    <input #fileInput type="file" hidden (change)="onFile($event)" />
+  </app-page-header>
+
+  @if (!loading() && assets().length === 0) {
+    <app-empty-state icon="perm_media" message="No media yet" hint="Upload your first file." />
+  } @else {
+    <div class="grid">
+      @for (asset of assets(); track asset.id) {
+        <div class="card">
+          <div class="thumb">
+            @if (isImage(asset)) {
+              <img [src]="asset.url" [alt]="asset.fileName" loading="lazy" />
+            } @else {
+              <mat-icon>description</mat-icon>
+            }
+          </div>
+          <div class="meta">
+            <span class="name" [title]="asset.fileName">{{ asset.fileName }}</span>
+            <span class="sub muted">
+              {{ asset.mediaType }} · {{ asset.fileSize / 1024 | number: '1.0-0' }} KB
+            </span>
+            <span class="sub muted">{{ asset.createdAt | date: 'mediumDate' }}</span>
+          </div>
+          <div class="actions">
+            <a mat-icon-button [href]="asset.url" target="_blank" rel="noopener" aria-label="Open">
+              <mat-icon>open_in_new</mat-icon>
+            </a>
+            <button mat-icon-button color="warn" (click)="remove(asset)" aria-label="Delete">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
