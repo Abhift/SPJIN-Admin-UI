@@ -170,8 +170,8 @@ export class PageFormComponent {
       sections: raw.sections.map((s, index) => ({
         sectionType: s.sectionType,
         sectionKey: s.sectionKey,
-        enabled: s.enabled,
         displayOrder: index,
+        enabled: s.enabled,
         sectionData: JSON.parse(s.sectionData),
       })),
     };

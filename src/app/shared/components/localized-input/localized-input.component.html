@@ -9,6 +9,8 @@
     >
       <mat-button-toggle value="en">EN</mat-button-toggle>
       <mat-button-toggle value="hi">हिं</mat-button-toggle>
+      <mat-button-toggle value="ne">नेपा</mat-button-toggle>
+      <mat-button-toggle value="gu">ગુજ</mat-button-toggle>
     </mat-button-toggle-group>
   </div>
 
@@ -21,7 +23,7 @@
         (ngModelChange)="update($event)"
         (blur)="blur()"
         [disabled]="disabled"
-        [placeholder]="lang() === 'en' ? 'English' : 'Hindi'"
+        [placeholder]="langPlaceholder()"
       ></textarea>
     } @else {
       <input
@@ -30,7 +32,7 @@
         (ngModelChange)="update($event)"
         (blur)="blur()"
         [disabled]="disabled"
-        [placeholder]="lang() === 'en' ? 'English' : 'Hindi'"
+        [placeholder]="langPlaceholder()"
       />
     }
     @if (hint) {

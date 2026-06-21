@@ -5,7 +5,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { LocalizedText, emptyLocalizedText } from '../../../core/models/api.models';
 
-type Lang = 'en' | 'hi';
+type Lang = 'en' | 'hi' | 'ne' | 'gu';
 
 /**
  * Bilingual (English / Hindi) text control backing a `LocalizedText` value.
@@ -40,7 +40,7 @@ export class LocalizedInputComponent implements ControlValueAccessor {
   private onTouched: () => void = () => {};
 
   writeValue(value: LocalizedText | null): void {
-    this.value.set(value ? { en: value.en ?? '', hi: value.hi ?? '' } : emptyLocalizedText());
+    this.value.set(value ? { en: value.en ?? '', hi: value.hi ?? '', ne: value.ne ?? '', gu: value.gu ?? '' } : emptyLocalizedText());
   }
 
   registerOnChange(fn: (value: LocalizedText) => void): void {
@@ -57,6 +57,11 @@ export class LocalizedInputComponent implements ControlValueAccessor {
 
   current(): string {
     return this.value()[this.lang()];
+  }
+
+  langPlaceholder(): string {
+    const map: Record<Lang, string> = { en: 'English', hi: 'Hindi', ne: 'Nepali', gu: 'Gujarati' };
+    return map[this.lang()];
   }
 
   update(text: string): void {

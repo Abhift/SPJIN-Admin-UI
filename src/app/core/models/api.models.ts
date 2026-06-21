@@ -1,11 +1,13 @@
-/** Bilingual content stored by the backend as JSONB `{ "en": ..., "hi": ... }`. */
+/** Multilingual content stored by the backend as JSONB `{ "en": ..., "hi": ..., "ne": ..., "gu": ... }`. */
 export interface LocalizedText {
   en: string;
   hi: string;
+  ne: string;
+  gu: string;
 }
 
 export function emptyLocalizedText(): LocalizedText {
-  return { en: '', hi: '' };
+  return { en: '', hi: '', ne: '', gu: '' };
 }
 
 export type ContentStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'SCHEDULED';
