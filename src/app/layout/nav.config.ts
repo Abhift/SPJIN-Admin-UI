@@ -46,6 +46,12 @@ export const NAV_SECTIONS: NavSection[] = [
     heading: 'System',
     items: [
       { label: 'Media', icon: 'perm_media', route: '/media', permissions: ['media:manage'] },
+      {
+        label: 'Upload Media',
+        icon: 'cloud_upload',
+        route: '/upload-media',
+        permissions: ['media:manage'],
+      },
       { label: 'Settings', icon: 'settings', route: '/settings', permissions: ['settings:manage'] },
     ],
   },

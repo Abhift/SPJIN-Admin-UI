@@ -162,6 +162,15 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/media/media-library.component').then((m) => m.MediaLibraryComponent),
       },
+      {
+        path: 'upload-media',
+        canActivate: [permissionGuard],
+        data: { permissions: ['media:manage'] },
+        loadComponent: () =>
+          import('./features/upload-media/upload-media.component').then(
+            (m) => m.UploadMediaComponent,
+          ),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

@@ -118,7 +118,7 @@ export interface Video {
   slug: string;
   title: LocalizedText;
   description?: LocalizedText;
-  videoUrl: string;
+  youtubeVideoId: string;
   thumbnailId?: string;
   status: ContentStatus;
   createdAt?: string;
@@ -129,7 +129,7 @@ export interface VideoRequest {
   slug: string;
   title: LocalizedText;
   description?: LocalizedText;
-  videoUrl: string;
+  youtubeVideoId: string;
   thumbnailId?: string;
   status: ContentStatus;
 }

@@ -1,0 +1,164 @@
+.upload-panel {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.upload-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.section-select {
+  width: 200px;
+  margin-bottom: -1.25em;
+}
+
+.upload-btn {
+  height: 56px;
+  padding: 0 24px;
+  gap: 8px;
+}
+
+.upload-progress {
+  margin-top: 12px;
+  border-radius: 4px;
+}
+
+/* Filter bar */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.filter-chip {
+  border-radius: 20px;
+  font-size: 0.82rem;
+  min-width: unset;
+  padding: 0 14px;
+  height: 32px;
+  line-height: 32px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: #fff;
+  transition: background 0.15s, color 0.15s;
+
+  &.active {
+    background: #1565c0;
+    color: #fff;
+    border-color: #1565c0;
+  }
+}
+
+/* Asset grid */
+.asset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.asset-card {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.15s;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.asset-preview {
+  position: relative;
+  height: 160px;
+  background: #f5f7fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.doc-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: #90a4ae;
+}
+
+.section-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(21, 101, 192, 0.85);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.03em;
+}
+
+.asset-body {
+  padding: 12px 14px 8px;
+  flex: 1;
+}
+
+.asset-name {
+  margin: 0 0 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.asset-meta {
+  margin: 0 0 4px;
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.asset-url {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #1565c0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.asset-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.copy-btn {
+  font-size: 0.78rem;
+  height: 32px;
+  line-height: 32px;
+  gap: 4px;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}

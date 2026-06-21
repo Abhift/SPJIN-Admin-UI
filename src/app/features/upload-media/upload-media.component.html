@@ -1,0 +1,117 @@
+<div class="page-container">
+  <app-page-header
+    title="Upload Media"
+    subtitle="Upload images and documents to Cloudflare R2 and copy URLs for use in section data"
+  ></app-page-header>
+
+  <!-- Upload panel -->
+  <div class="upload-panel">
+    <div class="upload-controls">
+      <mat-form-field appearance="outline" class="section-select">
+        <mat-label>Section type</mat-label>
+        <mat-select [(ngModel)]="uploadSectionType">
+          @for (type of sectionTypes; track type) {
+            <mat-option [value]="type">{{ type | titlecase }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <button
+        mat-flat-button
+        color="primary"
+        (click)="fileInput.click()"
+        [disabled]="uploading()"
+        class="upload-btn"
+      >
+        <mat-icon>cloud_upload</mat-icon>
+        {{ uploading() ? 'Uploading…' : 'Upload file' }}
+      </button>
+      <input
+        #fileInput
+        type="file"
+        accept="image/*,.pdf,.doc,.docx"
+        hidden
+        (change)="onFile($event)"
+      />
+    </div>
+
+    @if (uploading()) {
+      <mat-progress-bar mode="indeterminate" class="upload-progress"></mat-progress-bar>
+    }
+  </div>
+
+  <!-- Section type filter -->
+  <div class="filter-bar">
+    <button
+      mat-button
+      class="filter-chip"
+      [class.active]="selectedFilter() === 'all'"
+      (click)="selectedFilter.set('all')"
+    >
+      All ({{ assets().length }})
+    </button>
+    @for (type of sectionTypes; track type) {
+      @if (countByType(type) > 0) {
+        <button
+          mat-button
+          class="filter-chip"
+          [class.active]="selectedFilter() === type"
+          (click)="selectedFilter.set(type)"
+        >
+          {{ type | titlecase }} ({{ countByType(type) }})
+        </button>
+      }
+    }
+  </div>
+
+  <!-- Assets grid -->
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  } @else if (filtered().length === 0) {
+    <app-empty-state
+      icon="cloud_upload"
+      message="No files uploaded yet. Select a section type and upload a file above."
+    ></app-empty-state>
+  } @else {
+    <div class="asset-grid">
+      @for (asset of filtered(); track asset.id) {
+        <div class="asset-card">
+          <div class="asset-preview">
+            @if (isImage(asset)) {
+              <img [src]="asset.url" [alt]="asset.fileName" loading="lazy" />
+            } @else {
+              <mat-icon class="doc-icon">{{ fileIcon(asset) }}</mat-icon>
+            }
+            <span class="section-badge">{{ asset.sectionType | titlecase }}</span>
+          </div>
+
+          <div class="asset-body">
+            <p class="asset-name" [matTooltip]="asset.fileName">{{ asset.fileName }}</p>
+            <p class="asset-meta">{{ formatSize(asset.fileSize) }} · {{ asset.uploadedAt | date: 'dd MMM yyyy' }}</p>
+            <p class="asset-url" [matTooltip]="asset.url">{{ asset.url }}</p>
+          </div>
+
+          <div class="asset-actions">
+            <button
+              mat-stroked-button
+              class="copy-btn"
+              (click)="copyUrl(asset.url)"
+              matTooltip="Copy Cloudflare URL"
+            >
+              <mat-icon>content_copy</mat-icon>
+              Copy URL
+            </button>
+            <button
+              mat-icon-button
+              color="warn"
+              (click)="remove(asset)"
+              matTooltip="Delete from Cloudflare"
+            >
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

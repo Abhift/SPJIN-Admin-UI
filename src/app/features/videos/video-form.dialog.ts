@@ -56,10 +56,10 @@ import { slugValidator } from '../../shared/validators/slug.validator';
           </mat-form-field>
         </div>
         <mat-form-field class="full-width" appearance="outline">
-          <mat-label>Video URL</mat-label>
-          <input matInput formControlName="videoUrl" placeholder="https://..." />
-          @if (form.controls.videoUrl.hasError('required')) {
-            <mat-error>Video URL is required</mat-error>
+          <mat-label>YouTube Video ID</mat-label>
+          <input matInput formControlName="youtubeVideoId" placeholder="e.g. dQw4w9WgXcQ" />
+          @if (form.controls.youtubeVideoId.hasError('required')) {
+            <mat-error>YouTube Video ID is required</mat-error>
           }
         </mat-form-field>
         <app-localized-input
@@ -90,7 +90,7 @@ export class VideoFormDialog {
     title: [this.data?.title ?? emptyLocalizedText(), localizedTextValidator(true)],
     slug: [this.data?.slug ?? '', [Validators.required, slugValidator()]],
     status: [this.data?.status ?? 'DRAFT'],
-    videoUrl: [this.data?.videoUrl ?? '', Validators.required],
+    youtubeVideoId: [this.data?.youtubeVideoId ?? '', Validators.required],
     description: [this.data?.description ?? emptyLocalizedText()],
     thumbnailId: this.fb.control<string | null>(this.data?.thumbnailId ?? null),
   });
