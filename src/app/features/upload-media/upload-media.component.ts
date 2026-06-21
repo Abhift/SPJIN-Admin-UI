@@ -74,10 +74,27 @@ export class UploadMediaComponent {
     });
   }
 
+  private validateFile(file: File): string | null {
+    const MB = 1024 * 1024;
+    if (file.type.startsWith('image/') && file.size > 2 * MB) {
+      return `Image must be less than 2 MB (current: ${this.formatSize(file.size)})`;
+    }
+    if (file.size > 5 * MB) {
+      return `File must be less than 5 MB (current: ${this.formatSize(file.size)})`;
+    }
+    return null;
+  }
+
   onFile(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) {
+      return;
+    }
+    const error = this.validateFile(file);
+    if (error) {
+      this.notify.error(error);
+      input.value = '';
       return;
     }
     this.uploading.set(true);
