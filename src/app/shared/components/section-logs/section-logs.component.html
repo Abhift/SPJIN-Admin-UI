@@ -1,0 +1,33 @@
+<mat-accordion>
+  <mat-expansion-panel class="logs-panel">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        <mat-icon class="panel-icon">history</mat-icon>
+        Activity Logs
+      </mat-panel-title>
+      <mat-panel-description>{{ logs.length }} action{{ logs.length !== 1 ? 's' : '' }} recorded</mat-panel-description>
+    </mat-expansion-panel-header>
+
+    @if (logs.length === 0) {
+      <p class="empty-msg">No activity recorded yet for this entry.</p>
+    } @else {
+      <div class="log-list">
+        @for (log of logs; track $index) {
+          <div class="log-entry">
+            <span class="action-badge" [class]="actionClass(log.action)">
+              <mat-icon class="badge-icon">{{ actionIcon(log.action) }}</mat-icon>
+              {{ log.action }}
+            </span>
+            <span class="log-user">
+              <span class="avatar">{{ (log.performedBy || '?').charAt(0).toUpperCase() }}</span>
+              {{ log.performedBy || 'Unknown' }}
+            </span>
+            <span class="log-time" [matTooltip]="log.performedAt | date:'medium'">
+              {{ log.performedAt | date:'dd MMM yy, HH:mm' }}
+            </span>
+          </div>
+        }
+      </div>
+    }
+  </mat-expansion-panel>
+</mat-accordion>

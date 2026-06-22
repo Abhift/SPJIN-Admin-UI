@@ -15,6 +15,8 @@ import { CONTENT_STATUSES, ContentStatus, SeoDto, emptyLocalizedText } from '../
 import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
 import { MediaPickerComponent } from '../../shared/components/media-picker/media-picker.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
+import { LogEntry } from '../../core/models/audit.models';
 import { localizedTextValidator } from '../../shared/validators/localized-text.validator';
 import { slugValidator, slugify } from '../../shared/validators/slug.validator';
 
@@ -33,6 +35,7 @@ import { slugValidator, slugify } from '../../shared/validators/slug.validator';
     LocalizedInputComponent,
     MediaPickerComponent,
     PageHeaderComponent,
+    SectionLogsComponent,
   ],
   templateUrl: './article-form.component.html',
 })
@@ -54,6 +57,7 @@ export class ArticleFormComponent {
   readonly editing = signal(false);
   readonly saving = signal(false);
   readonly categories = signal<Category[]>([]);
+  readonly logs = signal<LogEntry[]>([]);
   readonly statuses = CONTENT_STATUSES;
 
   readonly form = this.fb.nonNullable.group({
@@ -85,7 +89,10 @@ export class ArticleFormComponent {
 
   private loadArticle(id: string): void {
     this.editing.set(true);
-    this.api.articles.get(id).subscribe((article) => this.patch(article));
+    this.api.articles.get(id).subscribe((article) => {
+      this.logs.set(article.logs ?? []);
+      this.patch(article);
+    });
   }
 
   private patch(a: Article): void {

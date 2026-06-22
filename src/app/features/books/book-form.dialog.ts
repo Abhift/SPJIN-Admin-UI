@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { LogEntry } from '../../core/models/audit.models';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -11,6 +12,7 @@ import { Book, BookRequest } from '../../core/models/content.models';
 import { CONTENT_STATUSES, emptyLocalizedText } from '../../core/models/api.models';
 import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
 import { MediaPickerComponent } from '../../shared/components/media-picker/media-picker.component';
+import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
 import { localizedTextValidator } from '../../shared/validators/localized-text.validator';
 import { slugValidator } from '../../shared/validators/slug.validator';
 
@@ -26,6 +28,7 @@ import { slugValidator } from '../../shared/validators/slug.validator';
     MatButtonModule,
     LocalizedInputComponent,
     MediaPickerComponent,
+    SectionLogsComponent,
   ],
   template: `
     <h2 mat-dialog-title>{{ data ? 'Edit book' : 'New book' }}</h2>
@@ -65,6 +68,9 @@ import { slugValidator } from '../../shared/validators/slug.validator';
           <app-media-picker label="Cover image" formControlName="coverImageId"></app-media-picker>
           <app-media-picker label="Book file (PDF)" formControlName="fileId"></app-media-picker>
         </div>
+        @if (data) {
+          <app-section-logs [logs]="logs()"></app-section-logs>
+        }
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button mat-button type="button" mat-dialog-close>Cancel</button>
@@ -82,6 +88,13 @@ export class BookFormDialog {
 
   readonly statuses = CONTENT_STATUSES;
   readonly saving = signal(false);
+  readonly logs = signal<LogEntry[]>([]);
+
+  constructor() {
+    if (this.data?.id) {
+      this.api.books.get(this.data.id).subscribe((b) => this.logs.set(b.logs ?? []));
+    }
+  }
 
   readonly form = this.fb.nonNullable.group({
     title: [this.data?.title ?? emptyLocalizedText(), localizedTextValidator(true)],

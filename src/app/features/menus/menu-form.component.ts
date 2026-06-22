@@ -10,6 +10,8 @@ import { ContentApi } from '../../core/services/content-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Menu, MenuItem, MenuRequest } from '../../core/models/content.models';
 import { LocalizedText, emptyLocalizedText } from '../../core/models/api.models';
+import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
+import { LogEntry } from '../../core/models/audit.models';
 import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 
@@ -25,6 +27,7 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
     MatIconModule,
     LocalizedInputComponent,
     PageHeaderComponent,
+    SectionLogsComponent,
   ],
   templateUrl: './menu-form.component.html',
   styleUrl: './menu-form.component.scss',
@@ -45,6 +48,7 @@ export class MenuFormComponent {
 
   readonly editing = signal(false);
   readonly saving = signal(false);
+  readonly logs = signal<LogEntry[]>([]);
 
   readonly form = this.fb.nonNullable.group({
     key: [{ value: '', disabled: false }, Validators.required],
@@ -93,7 +97,10 @@ export class MenuFormComponent {
 
   private loadMenu(id: string): void {
     this.editing.set(true);
-    this.api.menus.get(id).subscribe((menu) => this.patch(menu));
+    this.api.menus.get(id).subscribe((menu) => {
+      this.logs.set(menu.logs ?? []);
+      this.patch(menu);
+    });
   }
 
   private patch(m: Menu): void {

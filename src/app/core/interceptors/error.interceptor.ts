@@ -23,12 +23,27 @@ function messageFor(error: HttpErrorResponse): string {
   return error.statusText || 'Something went wrong.';
 }
 
-/** Surfaces backend errors as snackbars; 401 refresh is handled upstream and not shown. */
+function isBlank403(error: HttpErrorResponse): boolean {
+  if (error.status !== 403) return false;
+  const body = error.error;
+  return !body || body === '' || (typeof body === 'string' && !body.trim());
+}
+
+/**
+ * Surfaces backend errors as snackbars.
+ * - 401: handled upstream by authInterceptor (token refresh / logout) — skip.
+ * - Blank 403: handled upstream by authInterceptor (session logout) — skip.
+ * - Everything else: show snackbar.
+ */
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const notifications = inject(NotificationService);
   return next(req).pipe(
     catchError((error: unknown) => {
-      if (error instanceof HttpErrorResponse && error.status !== 401) {
+      if (
+        error instanceof HttpErrorResponse &&
+        error.status !== 401 &&
+        !isBlank403(error)
+      ) {
         notifications.error(messageFor(error));
       }
       return throwError(() => error);

@@ -8,7 +8,9 @@
     }
   </app-page-header>
 
-  @if (!loading() && rows().length === 0) {
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  } @else if (rows().length === 0) {
     <app-empty-state icon="photo_library" message="No albums yet" hint="Create your first album." />
   } @else {
     <app-data-table
@@ -25,4 +27,5 @@
       (page)="onPage($event)"
     ></mat-paginator>
   }
+
 </div>

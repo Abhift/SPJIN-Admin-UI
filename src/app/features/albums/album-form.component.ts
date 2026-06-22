@@ -17,6 +17,8 @@ import { MediaPickerComponent } from '../../shared/components/media-picker/media
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { MediaPickerDialogComponent } from '../../shared/components/media-picker/media-picker-dialog.component';
 import { MediaAsset } from '../../core/models/content.models';
+import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
+import { LogEntry } from '../../core/models/audit.models';
 import { localizedTextValidator } from '../../shared/validators/localized-text.validator';
 import { slugValidator, slugify } from '../../shared/validators/slug.validator';
 
@@ -34,6 +36,7 @@ import { slugValidator, slugify } from '../../shared/validators/slug.validator';
     LocalizedInputComponent,
     MediaPickerComponent,
     PageHeaderComponent,
+    SectionLogsComponent,
   ],
   templateUrl: './album-form.component.html',
   styleUrl: './album-form.component.scss',
@@ -56,6 +59,7 @@ export class AlbumFormComponent {
   readonly editing = signal(false);
   readonly saving = signal(false);
   readonly statuses = CONTENT_STATUSES;
+  readonly logs = signal<LogEntry[]>([]);
 
   readonly form = this.fb.nonNullable.group({
     title: [emptyLocalizedText(), localizedTextValidator(true)],
@@ -110,7 +114,10 @@ export class AlbumFormComponent {
 
   private loadAlbum(id: string): void {
     this.editing.set(true);
-    this.api.albums.get(id).subscribe((album) => this.patch(album));
+    this.api.albums.get(id).subscribe((album) => {
+      this.logs.set(album.logs ?? []);
+      this.patch(album);
+    });
   }
 
   private patch(a: Album): void {

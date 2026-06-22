@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { LogEntry } from '../../core/models/audit.models';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -10,6 +11,7 @@ import { Testimonial, TestimonialRequest } from '../../core/models/content.model
 import { emptyLocalizedText } from '../../core/models/api.models';
 import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
 import { MediaPickerComponent } from '../../shared/components/media-picker/media-picker.component';
+import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
 import { localizedTextValidator } from '../../shared/validators/localized-text.validator';
 
 @Component({
@@ -23,6 +25,7 @@ import { localizedTextValidator } from '../../shared/validators/localized-text.v
     MatButtonModule,
     LocalizedInputComponent,
     MediaPickerComponent,
+    SectionLogsComponent,
   ],
   template: `
     <h2 mat-dialog-title>{{ data ? 'Edit testimonial' : 'New testimonial' }}</h2>
@@ -47,6 +50,9 @@ import { localizedTextValidator } from '../../shared/validators/localized-text.v
           <mat-label>Display order</mat-label>
           <input matInput type="number" formControlName="displayOrder" />
         </mat-form-field>
+        @if (data) {
+          <app-section-logs [logs]="logs()"></app-section-logs>
+        }
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button mat-button type="button" mat-dialog-close>Cancel</button>
@@ -63,6 +69,13 @@ export class TestimonialFormDialog {
   private readonly ref = inject<MatDialogRef<TestimonialFormDialog, boolean>>(MatDialogRef);
 
   readonly saving = signal(false);
+  readonly logs = signal<LogEntry[]>([]);
+
+  constructor() {
+    if (this.data?.id) {
+      this.api.testimonials.get(this.data.id).subscribe((t) => this.logs.set(t.logs ?? []));
+    }
+  }
 
   readonly form = this.fb.nonNullable.group({
     authorName: [this.data?.authorName ?? '', Validators.required],

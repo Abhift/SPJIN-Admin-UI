@@ -1,0 +1,131 @@
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 24px;
+  color: #c62828;
+  text-align: center;
+
+  p { margin: 0; font-size: 0.9rem; color: rgba(0,0,0,0.6); }
+}
+
+.error-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: #ef9a9a;
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.filter-field {
+  width: 200px;
+  margin-bottom: -1.25em;
+}
+
+/* Table */
+.table-wrap {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.log-table {
+  width: 100%;
+}
+
+.log-row:hover {
+  background: #f5f7fa;
+}
+
+/* Action badge */
+.action-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+
+  .badge-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.badge-create   { background: #e8f5e9; color: #2e7d32; }
+.badge-update   { background: #e3f2fd; color: #1565c0; }
+.badge-delete   { background: #fce4ec; color: #c62828; }
+.badge-publish  { background: #e0f7fa; color: #00695c; }
+.badge-unpublish{ background: #fff3e0; color: #e65100; }
+.badge-upload   { background: #ede7f6; color: #4527a0; }
+.badge-rollback { background: #fff8e1; color: #f57f17; }
+
+/* Module chip */
+.module-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  background: #f0f0f0;
+  color: #444;
+}
+
+/* Resource name */
+.resource-name {
+  font-size: 0.85rem;
+  max-width: 180px;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+/* Resource ID */
+.resource-id {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.75rem;
+  color: #888;
+  cursor: default;
+}
+
+/* User cell */
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #1565c0;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.user-email {
+  font-size: 0.82rem;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

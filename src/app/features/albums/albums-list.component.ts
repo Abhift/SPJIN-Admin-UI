@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { ContentApi } from '../../core/services/content-api.service';
 import { NotificationService } from '../../core/services/notification.service';
@@ -25,6 +26,7 @@ import { confirm } from '../../shared/components/confirm-dialog/confirm-dialog.c
     MatButtonModule,
     MatIconModule,
     MatPaginatorModule,
+    MatProgressBarModule,
     PageHeaderComponent,
     EmptyStateComponent,
     DataTableComponent,
@@ -49,7 +51,7 @@ export class AlbumsListComponent {
   readonly canPublish = this.auth.hasPermission('content:publish');
 
   readonly columns: TableColumn<Album>[] = [
-    { key: 'title', header: 'Title', value: (r) => r.title.en },
+    { key: 'title', header: 'Title', value: (r) => r.title?.en ?? '' },
     { key: 'slug', header: 'Slug', value: (r) => r.slug },
     { key: 'count', header: 'Images', value: (r) => String(r.images?.length ?? 0) },
     { key: 'status', header: 'Status', type: 'status', value: (r) => r.status },

@@ -20,11 +20,11 @@
         mat-flat-button
         color="primary"
         (click)="fileInput.click()"
-        [disabled]="uploading()"
+        [disabled]="uploading() || compressing()"
         class="upload-btn"
       >
         <mat-icon>cloud_upload</mat-icon>
-        {{ uploading() ? 'Uploading…' : 'Upload file' }}
+        {{ compressing() ? 'Compressing…' : uploading() ? 'Uploading…' : 'Upload file' }}
       </button>
       <input
         #fileInput
@@ -35,7 +35,7 @@
       />
     </div>
 
-    @if (uploading()) {
+    @if (compressing() || uploading()) {
       <mat-progress-bar mode="indeterminate" class="upload-progress"></mat-progress-bar>
     }
   </div>

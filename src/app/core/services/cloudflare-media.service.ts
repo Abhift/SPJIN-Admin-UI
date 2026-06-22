@@ -16,6 +16,7 @@ export interface CloudflareAsset {
 
 export const CLOUDFLARE_SECTION_TYPES = [
   'general',
+  'hero-slider',
   'pages',
   'articles',
   'books',

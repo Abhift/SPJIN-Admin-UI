@@ -74,11 +74,45 @@ export class UploadMediaComponent {
     });
   }
 
-  private validateFile(file: File): string | null {
+  readonly compressing = signal(false);
+
+  private compressImage(file: File): Promise<File> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        canvas.getContext('2d')!.drawImage(img, 0, 0);
+        URL.revokeObjectURL(objectUrl);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob && blob.size < file.size) {
+              const name = file.name.replace(/\.[^.]+$/, '.webp');
+              resolve(new File([blob], name, { type: 'image/webp' }));
+            } else {
+              resolve(file);
+            }
+          },
+          'image/webp',
+          0.85,
+        );
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(file);
+      };
+
+      img.src = objectUrl;
+    });
+  }
+
+  private validateNonImage(file: File): string | null {
     const MB = 1024 * 1024;
-    if (file.type.startsWith('image/') && file.size > 2 * MB) {
-      return `Image must be less than 2 MB (current: ${this.formatSize(file.size)})`;
-    }
     if (file.size > 5 * MB) {
       return `File must be less than 5 MB (current: ${this.formatSize(file.size)})`;
     }
@@ -91,12 +125,31 @@ export class UploadMediaComponent {
     if (!file) {
       return;
     }
-    const error = this.validateFile(file);
-    if (error) {
-      this.notify.error(error);
-      input.value = '';
-      return;
+
+    if (file.type.startsWith('image/')) {
+      this.compressing.set(true);
+      this.compressImage(file).then((compressed) => {
+        this.compressing.set(false);
+        const savedBytes = file.size - compressed.size;
+        if (savedBytes > 0) {
+          this.notify.info(
+            `Image compressed: ${this.formatSize(file.size)} → ${this.formatSize(compressed.size)}`,
+          );
+        }
+        this.uploadFile(compressed, input);
+      });
+    } else {
+      const error = this.validateNonImage(file);
+      if (error) {
+        this.notify.error(error);
+        input.value = '';
+        return;
+      }
+      this.uploadFile(file, input);
     }
+  }
+
+  private uploadFile(file: File, input: HTMLInputElement): void {
     this.uploading.set(true);
     this.cfMedia.upload(file, this.uploadSectionType).subscribe({
       next: (asset) => {
@@ -115,16 +168,18 @@ export class UploadMediaComponent {
   }
 
   remove(asset: CloudflareAsset): void {
+    const type = asset.contentType.startsWith('image/') ? 'image' : 'file';
     confirm(this.dialog, {
-      title: 'Delete file',
-      message: `Delete "${asset.fileName}" from Cloudflare? This cannot be undone.`,
-      confirmText: 'Delete',
+      title: `Delete ${type}`,
+      message: `Are you sure you want to delete "${asset.fileName}"? This will permanently remove it from Cloudflare and cannot be undone.`,
+      confirmText: 'Yes, delete',
+      cancelText: 'Cancel',
       destructive: true,
     }).subscribe((ok) => {
       if (ok) {
         this.cfMedia.remove(asset.id).subscribe(() => {
           this.assets.update((list) => list.filter((a) => a.id !== asset.id));
-          this.notify.success('File deleted');
+          this.notify.success(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`);
         });
       }
     });

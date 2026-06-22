@@ -1,4 +1,5 @@
 import { ContentStatus, LocalizedText, MediaType, SeoDto } from './api.models';
+import { LogEntry } from './audit.models';
 
 /** Media library asset. */
 export interface MediaAsset {
@@ -35,6 +36,7 @@ export interface PageEntity {
   version?: number;
   createdAt?: string;
   updatedAt?: string;
+  logs?: LogEntry[];
 }
 
 export interface PageRequest {
@@ -73,6 +75,7 @@ export interface Article {
   version?: number;
   createdAt?: string;
   updatedAt?: string;
+  logs?: LogEntry[];
 }
 
 export interface ArticleRequest {
@@ -99,6 +102,7 @@ export interface Book {
   status: ContentStatus;
   createdAt?: string;
   updatedAt?: string;
+  logs?: LogEntry[];
 }
 
 export interface BookRequest {
@@ -123,6 +127,7 @@ export interface Video {
   status: ContentStatus;
   createdAt?: string;
   updatedAt?: string;
+  logs?: LogEntry[];
 }
 
 export interface VideoRequest {
@@ -143,6 +148,7 @@ export interface Quote {
   source?: string;
   displayOrder: number;
   createdAt?: string;
+  logs?: LogEntry[];
 }
 
 export interface QuoteRequest {
@@ -162,6 +168,7 @@ export interface Testimonial {
   avatarId?: string;
   displayOrder: number;
   createdAt?: string;
+  logs?: LogEntry[];
 }
 
 export interface TestimonialRequest {
@@ -185,6 +192,7 @@ export interface Activity {
   status: ContentStatus;
   createdAt?: string;
   updatedAt?: string;
+  logs?: LogEntry[];
 }
 
 export interface ActivityRequest {
@@ -210,6 +218,7 @@ export interface Branch {
   longitude?: number;
   displayOrder: number;
   createdAt?: string;
+  logs?: LogEntry[];
 }
 
 export interface BranchRequest {
@@ -243,6 +252,7 @@ export interface Album {
   status: ContentStatus;
   createdAt?: string;
   updatedAt?: string;
+  logs?: LogEntry[];
 }
 
 export interface AlbumRequest {
@@ -272,6 +282,7 @@ export interface Menu {
   items: MenuItem[];
   createdAt?: string;
   updatedAt?: string;
+  logs?: LogEntry[];
 }
 
 export interface MenuRequest {

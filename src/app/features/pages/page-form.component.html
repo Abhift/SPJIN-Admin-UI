@@ -116,6 +116,10 @@
       </mat-expansion-panel>
     </mat-accordion>
 
+    @if (editing()) {
+      <app-section-logs [logs]="logs()"></app-section-logs>
+    }
+
     <div class="card-actions-end actions">
       <button mat-button type="button" (click)="cancel()">Cancel</button>
       <button mat-flat-button color="primary" type="submit" [disabled]="saving()">Save page</button>

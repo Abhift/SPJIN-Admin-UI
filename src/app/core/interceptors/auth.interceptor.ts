@@ -16,6 +16,20 @@ function isAuthEndpoint(url: string): boolean {
   return url.includes('/auth/login') || url.includes('/auth/refresh');
 }
 
+/**
+ * A blank 403 means Spring Security blocked the request before it reached any
+ * controller — either CSRF or a session that is no longer valid. Treat it as a
+ * forced logout so the user can re-authenticate and get a fresh token.
+ *
+ * A 403 with a JSON body is a real permission-denied from the controller and
+ * should NOT trigger a logout.
+ */
+function isBlank403(error: HttpErrorResponse): boolean {
+  if (error.status !== 403) return false;
+  const body = error.error;
+  return !body || body === '' || (typeof body === 'string' && !body.trim());
+}
+
 /** Attaches the bearer token and transparently refreshes it once on a 401. */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
@@ -28,14 +42,21 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((error: unknown) => {
-      if (
-        error instanceof HttpErrorResponse &&
-        error.status === 401 &&
-        !isAuthEndpoint(req.url) &&
-        auth.refreshToken
-      ) {
+      if (!(error instanceof HttpErrorResponse) || isAuthEndpoint(req.url)) {
+        return throwError(() => error);
+      }
+
+      // 401 → try token refresh once, then give up
+      if (error.status === 401 && auth.refreshToken) {
         return handle401(req, next, auth);
       }
+
+      // Blank 403 → session is dead, force logout and redirect to login
+      if (isBlank403(error)) {
+        auth.logout(true);
+        return throwError(() => error);
+      }
+
       return throwError(() => error);
     }),
   );
@@ -65,7 +86,7 @@ function handle401(
     }),
     catchError((err: unknown) => {
       refreshing = false;
-      auth.logout();
+      auth.logout(true);
       return throwError(() => err);
     }),
   );

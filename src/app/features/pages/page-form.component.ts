@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, Input, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import {
   AbstractControl,
@@ -19,6 +19,8 @@ import { ContentApi } from '../../core/services/content-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { PageEntity, PageRequest, Section } from '../../core/models/content.models';
 import { CONTENT_STATUSES, ContentStatus, SeoDto, emptyLocalizedText } from '../../core/models/api.models';
+import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
+import { LogEntry } from '../../core/models/audit.models';
 import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { slugValidator, slugify } from '../../shared/validators/slug.validator';
@@ -51,6 +53,7 @@ function jsonValidator(control: AbstractControl) {
     MatExpansionModule,
     LocalizedInputComponent,
     PageHeaderComponent,
+    SectionLogsComponent,
   ],
   templateUrl: './page-form.component.html',
   styleUrl: './page-form.component.scss',
@@ -62,7 +65,7 @@ export class PageFormComponent {
   private readonly router = inject(Router);
 
   private _id: string | null = null;
-  set id(value: string | undefined) {
+  @Input() set id(value: string | undefined) {
     this._id = value ?? null;
     if (value) {
       this.loadPage(value);
@@ -71,6 +74,7 @@ export class PageFormComponent {
 
   readonly editing = signal(false);
   readonly saving = signal(false);
+  readonly logs = signal<LogEntry[]>([]);
   readonly statuses = CONTENT_STATUSES;
 
   readonly form = this.fb.nonNullable.group({
@@ -129,7 +133,10 @@ export class PageFormComponent {
 
   private loadPage(id: string): void {
     this.editing.set(true);
-    this.api.pages.get(id).subscribe((page) => this.patch(page));
+    this.api.pages.get(id).subscribe((page) => {
+      this.logs.set(page.logs ?? []);
+      this.patch(page);
+    });
   }
 
   private patch(p: PageEntity): void {
