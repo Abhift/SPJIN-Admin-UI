@@ -94,12 +94,14 @@ export class PageFormComponent {
   }
 
   private sectionGroup(section: Partial<Section>) {
+    const raw = section.sectionData as Record<string, unknown> | null | undefined;
+    const data = raw && typeof raw === 'object' ? (({ logs: _, ...rest }) => rest)(raw) : raw;
     return this.fb.nonNullable.group({
       sectionType: [section.sectionType ?? '', Validators.required],
       sectionKey: [section.sectionKey ?? '', Validators.required],
       enabled: [section.enabled ?? true],
       sectionData: [
-        section.sectionData ? JSON.stringify(section.sectionData, null, 2) : '{}',
+        data ? JSON.stringify(data, null, 2) : '{}',
         jsonValidator,
       ],
     });
@@ -174,13 +176,17 @@ export class PageFormComponent {
       slug: raw.slug,
       status: raw.status,
       seo,
-      sections: raw.sections.map((s, index) => ({
-        sectionType: s.sectionType,
-        sectionKey: s.sectionKey,
-        displayOrder: index,
-        enabled: s.enabled,
-        sectionData: JSON.parse(s.sectionData),
-      })),
+      sections: raw.sections.map((s, index) => {
+        const parsed = JSON.parse(s.sectionData) as Record<string, unknown>;
+        const { logs: _, ...sectionData } = parsed;
+        return {
+          sectionType: s.sectionType,
+          sectionKey: s.sectionKey,
+          displayOrder: index,
+          enabled: s.enabled,
+          sectionData,
+        };
+      }),
     };
     const req = this._id ? this.api.pages.update(this._id, body) : this.api.pages.create(body);
     req.subscribe({

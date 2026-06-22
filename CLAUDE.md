@@ -5,21 +5,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm start          # dev server at http://localhost:4200 (proxies /api → localhost:8080)
-npm run build      # production build → dist/spjin-admin/
-npm test           # unit tests via Karma/Jasmine (Chrome)
+npm start                    # dev server at http://localhost:4200 (proxies /api → localhost:8080)
+npm run build                # production build → dist/spjin-admin/
+npm test                     # unit tests via Karma/Jasmine (Chrome)
+npx tsc --noEmit             # type-check (no linter configured)
 ng generate component features/<name>/<name>.component  # scaffold a new feature component
 ```
 
 The backend must be running on port 8080 before starting the dev server. The proxy (`proxy.conf.json`) forwards all `/api` requests to it.
 
-There is no linter configured. TypeScript compilation (`npx tsc --noEmit`) serves as the static check.
-
 ## Architecture
 
 **Angular 18 standalone components** — no NgModules anywhere. Every component, directive, and pipe is `standalone: true` and declares its own imports.
-
-### Directory layout
 
 ```
 src/app/
@@ -33,40 +30,55 @@ src/app/
 
 `AuthService` stores a JWT pair in `localStorage` (`spjin.accessToken` / `spjin.refreshToken`) and exposes the current user as an Angular **signal**. On startup it decodes the stored access token (`jwt.util.ts`) to restore the user without a network call.
 
-Three functional interceptors are registered in order in `app.config.ts`:
+Four functional interceptors are registered in order in `app.config.ts`:
 1. **loadingInterceptor** — increments/decrements an in-flight counter that drives the global progress bar.
 2. **authInterceptor** — attaches `Authorization: Bearer <token>`. On 401, it transparently refreshes the token once; concurrent requests during refresh are queued on a `BehaviorSubject`.
 3. **errorInterceptor** — converts all non-401 HTTP errors into snackbar notifications via `NotificationService`.
+4. **auditInterceptor** — fires after every successful `POST`/`PUT`/`DELETE` to `/admin/**` (except `/audit-logs` and `/auth/`) and writes a structured `AuditLog` entry via `AuditLogService`. Parses action type, resource type, resource ID, and a human-readable name from the request/response automatically.
 
 Route protection uses three functional guards: `authGuard` (redirect to `/login`), `guestGuard` (redirect away from `/login`), `permissionGuard` (checks `route.data.permissions` against the user's `authorities`).
 
 ### API layer
 
-`CrudClient<TEntity, TRequest>` is a generic class that wraps the standard admin REST conventions (`GET /admin/<resource>?page=&size=`, `POST`, `PUT/:id`, `DELETE/:id`, `POST/:id/publish`, `POST/:id/rollback/:version`). All URLs are prefixed with `environment.apiBase` (`/api/v1` in dev).
+`CrudClient<TEntity, TRequest>` is a generic class that wraps the standard admin REST conventions (`GET /admin/<resource>?page=&size=`, `POST`, `PUT/:id`, `DELETE/:id`, `POST/:id/publish?publish=`, `POST/:id/rollback/:version`). All URLs are prefixed with `environment.apiBase` (`/api/v1` in dev).
 
-`ContentApi` (root-provided service) instantiates one `CrudClient` per resource and is the single point of contact between features and the HTTP layer. Features should inject `ContentApi`, not `HttpClient` directly.
+`ContentApi` (root-provided service) instantiates one `CrudClient` per resource and is the single point of contact between features and the HTTP layer. Features should inject `ContentApi`, not `HttpClient` directly. Article categories and settings have extra hand-written methods on `ContentApi` beyond the standard CRUD.
 
 ### Bilingual content (LocalizedText)
 
-All user-visible text fields are stored as `{ en: string; hi: string }` (`LocalizedText`). Key pieces:
+All user-visible text fields are stored as `{ en: string; hi: string; ne: string; gu: string }` (`LocalizedText`). Use `emptyLocalizedText()` from `api.models.ts` to initialize a blank value. Key pieces:
 
 - **`LocalizedInputComponent`** (`app-localized-input`) — a `ControlValueAccessor` that wraps a `LocalizedText` value. Renders a language toggle + input/textarea. Use it in reactive forms wherever bilingual text is needed.
 - **`LocalizePipe`** (`localize`) — displays a `LocalizedText` in templates; falls back `en → hi` if the requested language is empty.
-- **`localizedTextValidator`** / **`slugValidator`** — reusable reactive-form validators in `shared/validators/`.
+- **`localizedTextValidator`** / **`slugValidator`** — reusable reactive-form validators in `shared/validators/`. `slug.validator.ts` also exports `slugify(name)` for auto-generating a slug from a display name.
 
 ### Feature patterns
 
 **Simple resources** (videos, books, quotes, testimonials, activities, branches) follow a *list + Material dialog* pattern: a `*-list.component` hosts the `DataTableComponent` and opens an inline `*-form.dialog` for create/edit.
 
-**Complex resources** (articles, pages, albums, menus) use full-page routed form components (`article-form.component`, `page-form.component`, etc.) navigated from their list components.
+**Complex resources** (articles, pages, albums, menus) use full-page routed form components (`article-form.component`, `page-form.component`, etc.) navigated from their list components. These components receive the route `:id` parameter as an `@Input()` (Angular route input binding, configured in `app.config.ts`), **not** via `ActivatedRoute`. When `id` is undefined the form is in create mode; when set it loads the entity and switches to edit mode.
+
+### Media
+
+There are two separate media systems:
+
+- **`MediaService`** — internal media library (`/admin/media`). Used for images/files attached to content entities (cover images, avatars, book PDFs, etc.). `MediaPickerComponent` / `MediaPickerDialogComponent` let the user browse and select a `MediaAsset` from this library.
+- **`CloudflareMediaService`** — CDN-hosted assets (`/admin/cloudflare-media`) tagged by `sectionType` (e.g., `hero-slider`, `pages`, `articles`). Used by the page section builder and the `/upload-media` route to manage section-level assets separately from the entity media library.
+
+### Audit logs
+
+Every mutating API call is automatically captured by `auditInterceptor` without any per-feature code. The `/logs` route (`LogsComponent`) displays the full `AuditLog` table with filtering by resource type and action.
+
+Per-resource audit trails (recent `LogEntry[]` returned inline with entity responses) are shown inside complex form pages via `SectionLogsComponent` (`app-section-logs`), rendered as a collapsible panel at the bottom of the form.
 
 ### Shared components
 
 - `DataTableComponent<T>` — generic Material table; callers declare `TableColumn<T>[]` and `RowAction<T>[]`, receive `TableActionEvent<T>` via `(action)` output.
-- `MediaPickerComponent` / `MediaPickerDialogComponent` — browse and select assets from the media library; emits the chosen `MediaAsset`.
+- `MediaPickerComponent` / `MediaPickerDialogComponent` — browse and select assets from the internal media library; emits the chosen `MediaAsset`.
+- `SectionLogsComponent` — collapsible audit trail panel; accepts `LogEntry[]` as `@Input() logs`.
 - `ConfirmDialogComponent` — standard yes/no dialog.
 - `PageHeaderComponent` — page title + breadcrumb area.
-- `StatusChipComponent` — colored chip for `ContentStatus`.
+- `StatusChipComponent` — colored chip for `ContentStatus` (`DRAFT` | `PUBLISHED` | `ARCHIVED` | `SCHEDULED`).
 - `EmptyStateComponent` — empty list placeholder.
 - `HasPermissionDirective` (`*appHasPermission`) — structural directive that hides elements the current user lacks permission to see.
 
