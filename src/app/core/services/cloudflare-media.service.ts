@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Page, PageQuery } from '../models/api.models';
+import { Page, PageQuery, PAGE_SECTION_TYPES, PageSectionType } from '../models/api.models';
 
 export interface CloudflareAsset {
   id: string;
@@ -14,22 +14,8 @@ export interface CloudflareAsset {
   uploadedAt: string;
 }
 
-export const CLOUDFLARE_SECTION_TYPES = [
-  'general',
-  'hero-slider',
-  'pages',
-  'articles',
-  'books',
-  'videos',
-  'activities',
-  'albums',
-  'quotes',
-  'testimonials',
-  'branches',
-  'menus',
-] as const;
-
-export type CloudflareSectionType = (typeof CLOUDFLARE_SECTION_TYPES)[number];
+export const CLOUDFLARE_SECTION_TYPES = PAGE_SECTION_TYPES;
+export type CloudflareSectionType = PageSectionType;
 
 @Injectable({ providedIn: 'root' })
 export class CloudflareMediaService {

@@ -12,6 +12,23 @@ export function emptyLocalizedText(): LocalizedText {
 
 export type ContentStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'SCHEDULED';
 
+export const PAGE_SECTION_TYPES = [
+  'general',
+  'hero-slider',
+  'pages',
+  'articles',
+  'books',
+  'videos',
+  'activities',
+  'albums',
+  'quotes',
+  'testimonials',
+  'branches',
+  'menus',
+] as const;
+
+export type PageSectionType = (typeof PAGE_SECTION_TYPES)[number];
+
 export const CONTENT_STATUSES: ContentStatus[] = ['DRAFT', 'PUBLISHED', 'ARCHIVED', 'SCHEDULED'];
 
 export type MediaType = 'IMAGE' | 'VIDEO' | 'PDF' | 'AUDIO' | 'OTHER';

@@ -62,7 +62,14 @@
             <div class="form-grid">
               <mat-form-field appearance="outline">
                 <mat-label>Section type</mat-label>
-                <input matInput formControlName="sectionType" placeholder="e.g. hero, gallery" />
+                <mat-select formControlName="sectionType">
+                  @for (type of sectionTypes; track type) {
+                    <mat-option [value]="type">{{ type }}</mat-option>
+                  }
+                </mat-select>
+                @if (section.get('sectionType')?.hasError('required')) {
+                  <mat-error>Section type is required</mat-error>
+                }
               </mat-form-field>
               <mat-form-field appearance="outline">
                 <mat-label>Section key</mat-label>

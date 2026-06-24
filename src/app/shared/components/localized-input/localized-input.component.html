@@ -20,6 +20,7 @@
         matInput
         [rows]="rows"
         [ngModel]="current()"
+        [errorStateMatcher]="errorMatcher"
         (ngModelChange)="update($event)"
         (blur)="blur()"
         [disabled]="disabled"
@@ -29,6 +30,7 @@
       <input
         matInput
         [ngModel]="current()"
+        [errorStateMatcher]="errorMatcher"
         (ngModelChange)="update($event)"
         (blur)="blur()"
         [disabled]="disabled"
@@ -37,6 +39,9 @@
     }
     @if (hint) {
       <mat-hint>{{ hint }}</mat-hint>
+    }
+    @if (ctrl?.invalid && ctrl?.touched) {
+      <mat-error>{{ label }} (English) is required</mat-error>
     }
   </mat-form-field>
 </div>

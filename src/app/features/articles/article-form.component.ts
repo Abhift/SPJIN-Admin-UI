@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, Input, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -47,7 +47,7 @@ export class ArticleFormComponent {
 
   /** Route param via withComponentInputBinding; empty for new. */
   private _id: string | null = null;
-  set id(value: string | undefined) {
+  @Input() set id(value: string | undefined) {
     this._id = value ?? null;
     if (value) {
       this.loadArticle(value);

@@ -18,7 +18,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { ContentApi } from '../../core/services/content-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { PageEntity, PageRequest, Section } from '../../core/models/content.models';
-import { CONTENT_STATUSES, ContentStatus, SeoDto, emptyLocalizedText } from '../../core/models/api.models';
+import { CONTENT_STATUSES, ContentStatus, PAGE_SECTION_TYPES, SeoDto, emptyLocalizedText } from '../../core/models/api.models';
 import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
 import { LogEntry } from '../../core/models/audit.models';
 import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
@@ -76,6 +76,7 @@ export class PageFormComponent {
   readonly saving = signal(false);
   readonly logs = signal<LogEntry[]>([]);
   readonly statuses = CONTENT_STATUSES;
+  readonly sectionTypes = PAGE_SECTION_TYPES;
 
   readonly form = this.fb.nonNullable.group({
     name: ['', Validators.required],
