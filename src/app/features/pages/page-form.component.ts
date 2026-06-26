@@ -99,7 +99,6 @@ export class PageFormComponent {
     const data = raw && typeof raw === 'object' ? (({ logs: _, ...rest }) => rest)(raw) : raw;
     return this.fb.nonNullable.group({
       sectionType: [section.sectionType ?? '', Validators.required],
-      sectionKey: [section.sectionKey ?? '', Validators.required],
       enabled: [section.enabled ?? true],
       sectionData: [
         data ? JSON.stringify(data, null, 2) : '{}',
@@ -182,7 +181,7 @@ export class PageFormComponent {
         const { logs: _, ...sectionData } = parsed;
         return {
           sectionType: s.sectionType,
-          sectionKey: s.sectionKey,
+          sectionKey: s.sectionType,
           displayOrder: index,
           enabled: s.enabled,
           sectionData,

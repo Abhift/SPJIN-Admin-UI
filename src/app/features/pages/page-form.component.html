@@ -54,9 +54,6 @@
               <mat-panel-title>
                 {{ section.get('sectionType')?.value || 'Untitled section' }}
               </mat-panel-title>
-              <mat-panel-description>
-                {{ section.get('sectionKey')?.value }}
-              </mat-panel-description>
             </mat-expansion-panel-header>
 
             <div class="form-grid">
@@ -70,10 +67,6 @@
                 @if (section.get('sectionType')?.hasError('required')) {
                   <mat-error>Section type is required</mat-error>
                 }
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Section key</mat-label>
-                <input matInput formControlName="sectionKey" placeholder="unique key" />
               </mat-form-field>
             </div>
 

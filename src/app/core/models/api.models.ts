@@ -14,7 +14,7 @@ export type ContentStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'SCHEDULED';
 
 export const PAGE_SECTION_TYPES = [
   'general',
-  'hero-slider',
+  'hero',
   'pages',
   'articles',
   'books',
@@ -25,6 +25,7 @@ export const PAGE_SECTION_TYPES = [
   'testimonials',
   'branches',
   'menus',
+  'achievements',
 ] as const;
 
 export type PageSectionType = (typeof PAGE_SECTION_TYPES)[number];
