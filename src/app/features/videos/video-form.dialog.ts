@@ -14,7 +14,6 @@ import { LocalizedInputComponent } from '../../shared/components/localized-input
 import { MediaPickerComponent } from '../../shared/components/media-picker/media-picker.component';
 import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
 import { localizedTextValidator } from '../../shared/validators/localized-text.validator';
-import { slugValidator } from '../../shared/validators/slug.validator';
 
 @Component({
   selector: 'app-video-form-dialog',
@@ -39,25 +38,14 @@ import { slugValidator } from '../../shared/validators/slug.validator';
           formControlName="title"
           [required]="true"
         ></app-localized-input>
-        <div class="form-grid">
-          <mat-form-field appearance="outline">
-            <mat-label>Slug</mat-label>
-            <input matInput formControlName="slug" />
-            @if (form.controls.slug.hasError('required')) {
-              <mat-error>Slug is required</mat-error>
-            } @else if (form.controls.slug.hasError('slug')) {
-              <mat-error>Lowercase letters, numbers and hyphens only</mat-error>
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            @for (s of statuses; track s) {
+              <mat-option [value]="s">{{ s }}</mat-option>
             }
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Status</mat-label>
-            <mat-select formControlName="status">
-              @for (s of statuses; track s) {
-                <mat-option [value]="s">{{ s }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-        </div>
+          </mat-select>
+        </mat-form-field>
         <mat-form-field class="full-width" appearance="outline">
           <mat-label>YouTube Video ID</mat-label>
           <input matInput formControlName="youtubeVideoId" placeholder="e.g. dQw4w9WgXcQ" />
@@ -101,7 +89,6 @@ export class VideoFormDialog {
 
   readonly form = this.fb.nonNullable.group({
     title: [this.data?.title ?? emptyLocalizedText(), localizedTextValidator(true)],
-    slug: [this.data?.slug ?? '', [Validators.required, slugValidator()]],
     status: [this.data?.status ?? 'DRAFT'],
     youtubeVideoId: [this.data?.youtubeVideoId ?? '', Validators.required],
     description: [this.data?.description ?? emptyLocalizedText()],

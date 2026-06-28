@@ -49,7 +49,6 @@ export class VideosListComponent {
 
   readonly columns: TableColumn<Video>[] = [
     { key: 'title', header: 'Title', value: (r) => r.title.en },
-    { key: 'slug', header: 'Slug', value: (r) => r.slug },
     { key: 'youtubeVideoId', header: 'YouTube Video ID', value: (r) => r.youtubeVideoId },
     { key: 'status', header: 'Status', type: 'status', value: (r) => r.status },
   ];

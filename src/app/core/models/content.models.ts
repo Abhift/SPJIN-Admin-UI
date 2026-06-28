@@ -119,7 +119,6 @@ export interface BookRequest {
 
 export interface Video {
   id: string;
-  slug: string;
   title: LocalizedText;
   description?: LocalizedText;
   youtubeVideoId: string;
@@ -131,7 +130,6 @@ export interface Video {
 }
 
 export interface VideoRequest {
-  slug: string;
   title: LocalizedText;
   description?: LocalizedText;
   youtubeVideoId: string;
