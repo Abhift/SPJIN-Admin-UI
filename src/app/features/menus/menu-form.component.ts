@@ -13,6 +13,8 @@ import { LocalizedText, emptyLocalizedText } from '../../core/models/api.models'
 import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
 import { LogEntry } from '../../core/models/audit.models';
 import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
+import { LanguageSwitchComponent } from '../../shared/components/language-switch/language-switch.component';
+import { LocalizedLangService } from '../../shared/services/localized-lang.service';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 
 @Component({
@@ -26,9 +28,11 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
     MatButtonModule,
     MatIconModule,
     LocalizedInputComponent,
+    LanguageSwitchComponent,
     PageHeaderComponent,
     SectionLogsComponent,
   ],
+  providers: [LocalizedLangService],
   templateUrl: './menu-form.component.html',
   styleUrl: './menu-form.component.scss',
 })

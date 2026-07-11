@@ -11,6 +11,8 @@ import { NotificationService } from '../../core/services/notification.service';
 import { Category, CategoryRequest } from '../../core/models/content.models';
 import { emptyLocalizedText } from '../../core/models/api.models';
 import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
+import { LanguageSwitchComponent } from '../../shared/components/language-switch/language-switch.component';
+import { LocalizedLangService } from '../../shared/services/localized-lang.service';
 import { localizedTextValidator } from '../../shared/validators/localized-text.validator';
 import { slugValidator } from '../../shared/validators/slug.validator';
 
@@ -26,7 +28,9 @@ import { slugValidator } from '../../shared/validators/slug.validator';
     MatIconModule,
     MatListModule,
     LocalizedInputComponent,
+    LanguageSwitchComponent,
   ],
+  providers: [LocalizedLangService],
   templateUrl: './category-manager.dialog.html',
 })
 export class CategoryManagerDialog {

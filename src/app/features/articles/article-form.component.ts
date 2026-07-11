@@ -13,6 +13,8 @@ import { NotificationService } from '../../core/services/notification.service';
 import { Article, ArticleRequest, Category } from '../../core/models/content.models';
 import { CONTENT_STATUSES, ContentStatus, SeoDto, emptyLocalizedText } from '../../core/models/api.models';
 import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
+import { LanguageSwitchComponent } from '../../shared/components/language-switch/language-switch.component';
+import { LocalizedLangService } from '../../shared/services/localized-lang.service';
 import { MediaPickerComponent } from '../../shared/components/media-picker/media-picker.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
@@ -33,10 +35,12 @@ import { slugValidator, slugify } from '../../shared/validators/slug.validator';
     MatIconModule,
     MatExpansionModule,
     LocalizedInputComponent,
+    LanguageSwitchComponent,
     MediaPickerComponent,
     PageHeaderComponent,
     SectionLogsComponent,
   ],
+  providers: [LocalizedLangService],
   templateUrl: './article-form.component.html',
 })
 export class ArticleFormComponent {

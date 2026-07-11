@@ -10,6 +10,8 @@ import { NotificationService } from '../../core/services/notification.service';
 import { Branch, BranchRequest } from '../../core/models/content.models';
 import { emptyLocalizedText } from '../../core/models/api.models';
 import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
+import { LanguageSwitchComponent } from '../../shared/components/language-switch/language-switch.component';
+import { LocalizedLangService } from '../../shared/services/localized-lang.service';
 import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
 import { localizedTextValidator } from '../../shared/validators/localized-text.validator';
 
@@ -23,12 +25,15 @@ import { localizedTextValidator } from '../../shared/validators/localized-text.v
     MatInputModule,
     MatButtonModule,
     LocalizedInputComponent,
+    LanguageSwitchComponent,
     SectionLogsComponent,
   ],
+  providers: [LocalizedLangService],
   template: `
     <h2 mat-dialog-title>{{ data ? 'Edit branch' : 'New branch' }}</h2>
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content>
+        <app-language-switch></app-language-switch>
         <app-localized-input
           label="Branch name"
           formControlName="name"

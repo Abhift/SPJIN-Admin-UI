@@ -10,6 +10,8 @@ import { NotificationService } from '../../core/services/notification.service';
 import { Testimonial, TestimonialRequest } from '../../core/models/content.models';
 import { emptyLocalizedText } from '../../core/models/api.models';
 import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
+import { LanguageSwitchComponent } from '../../shared/components/language-switch/language-switch.component';
+import { LocalizedLangService } from '../../shared/services/localized-lang.service';
 import { MediaPickerComponent } from '../../shared/components/media-picker/media-picker.component';
 import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
 import { localizedTextValidator } from '../../shared/validators/localized-text.validator';
@@ -24,9 +26,11 @@ import { localizedTextValidator } from '../../shared/validators/localized-text.v
     MatInputModule,
     MatButtonModule,
     LocalizedInputComponent,
+    LanguageSwitchComponent,
     MediaPickerComponent,
     SectionLogsComponent,
   ],
+  providers: [LocalizedLangService],
   template: `
     <h2 mat-dialog-title>{{ data ? 'Edit testimonial' : 'New testimonial' }}</h2>
     <form [formGroup]="form" (ngSubmit)="save()">
@@ -38,6 +42,7 @@ import { localizedTextValidator } from '../../shared/validators/localized-text.v
             <mat-error>Author name is required</mat-error>
           }
         </mat-form-field>
+        <app-language-switch></app-language-switch>
         <app-localized-input label="Author title" formControlName="authorTitle"></app-localized-input>
         <app-localized-input
           label="Testimonial"

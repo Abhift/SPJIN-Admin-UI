@@ -6,6 +6,7 @@
 
   <form [formGroup]="form" (ngSubmit)="save()">
     <mat-card class="form-card">
+      <app-language-switch></app-language-switch>
       <app-localized-input
         label="Title"
         formControlName="title"

@@ -2,16 +2,14 @@ import { Component, Input, inject, signal } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NgControl } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { LocalizedText, emptyLocalizedText } from '../../../core/models/api.models';
-
-type Lang = 'en' | 'hi' | 'ne' | 'gu';
+import { Lang, LocalizedLangService } from '../../services/localized-lang.service';
 
 @Component({
   selector: 'app-localized-input',
   standalone: true,
-  imports: [FormsModule, MatFormFieldModule, MatInputModule, MatButtonToggleModule],
+  imports: [FormsModule, MatFormFieldModule, MatInputModule],
   templateUrl: './localized-input.component.html',
   styleUrl: './localized-input.component.scss',
 })
@@ -24,11 +22,15 @@ export class LocalizedInputComponent implements ControlValueAccessor {
 
   protected readonly ctrl = inject(NgControl, { optional: true, self: true });
 
+  /** Falls back to a private instance when no form-level provider exists. */
+  private readonly langService =
+    inject(LocalizedLangService, { optional: true }) ?? new LocalizedLangService();
+
   protected readonly errorMatcher: ErrorStateMatcher = {
     isErrorState: () => !!(this.ctrl?.invalid && this.ctrl?.touched),
   };
 
-  readonly lang = signal<Lang>('en');
+  protected readonly lang = this.langService.lang;
   readonly value = signal<LocalizedText>(emptyLocalizedText());
   disabled = false;
 
@@ -72,9 +74,5 @@ export class LocalizedInputComponent implements ControlValueAccessor {
 
   blur(): void {
     this.onTouched();
-  }
-
-  switchLang(lang: Lang): void {
-    this.lang.set(lang);
   }
 }

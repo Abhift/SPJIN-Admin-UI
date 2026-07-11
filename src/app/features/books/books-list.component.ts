@@ -50,6 +50,7 @@ export class BooksListComponent {
   readonly columns: TableColumn<Book>[] = [
     { key: 'title', header: 'Title', value: (r) => r.title.en },
     { key: 'author', header: 'Author', value: (r) => r.author?.en ?? '' },
+    { key: 'category', header: 'Category', value: (r) => r.category ?? '' },
     { key: 'slug', header: 'Slug', value: (r) => r.slug },
     { key: 'status', header: 'Status', type: 'status', value: (r) => r.status },
   ];

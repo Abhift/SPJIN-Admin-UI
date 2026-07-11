@@ -29,6 +29,7 @@
 
     <form class="editor" [formGroup]="form" (ngSubmit)="save()">
       <h3>{{ editingId() ? 'Edit category' : 'New category' }}</h3>
+      <app-language-switch></app-language-switch>
       <app-localized-input
         label="Name"
         formControlName="name"

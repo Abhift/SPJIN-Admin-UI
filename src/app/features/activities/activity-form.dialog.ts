@@ -6,17 +6,21 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
+import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ContentApi } from '../../core/services/content-api.service';
+import { CloudflareMediaService } from '../../core/services/cloudflare-media.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Activity, ActivityRequest } from '../../core/models/content.models';
 import { CONTENT_STATUSES, emptyLocalizedText } from '../../core/models/api.models';
 import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
-import { MediaPickerComponent } from '../../shared/components/media-picker/media-picker.component';
+import { LanguageSwitchComponent } from '../../shared/components/language-switch/language-switch.component';
+import { LocalizedLangService } from '../../shared/services/localized-lang.service';
 import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
 import { localizedTextValidator } from '../../shared/validators/localized-text.validator';
-import { slugValidator } from '../../shared/validators/slug.validator';
+import { slugValidator, slugify } from '../../shared/validators/slug.validator';
 
 @Component({
   selector: 'app-activity-form-dialog',
@@ -28,16 +32,19 @@ import { slugValidator } from '../../shared/validators/slug.validator';
     MatInputModule,
     MatSelectModule,
     MatDatepickerModule,
-    MatNativeDateModule,
     MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
     LocalizedInputComponent,
-    MediaPickerComponent,
+    LanguageSwitchComponent,
     SectionLogsComponent,
   ],
+  providers: [LocalizedLangService, provideNativeDateAdapter()],
   template: `
     <h2 mat-dialog-title>{{ data ? 'Edit activity' : 'New activity' }}</h2>
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content>
+        <app-language-switch></app-language-switch>
         <app-localized-input
           label="Title"
           formControlName="title"
@@ -74,14 +81,45 @@ import { slugValidator } from '../../shared/validators/slug.validator';
           formControlName="description"
           [multiline]="true"
         ></app-localized-input>
-        <app-media-picker label="Cover image" formControlName="coverImageId"></app-media-picker>
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Cover image URL</mat-label>
+          <input matInput formControlName="coverImageUrl" placeholder="https://... or upload" />
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            matTooltip="Upload cover image"
+            [disabled]="uploadingCover()"
+            (click)="coverInput.click()"
+          >
+            <mat-icon>{{ uploadingCover() ? 'hourglass_top' : 'cloud_upload' }}</mat-icon>
+          </button>
+          <mat-hint>Uploads are named after the slug, e.g. "{{ baseName() }}-cover"</mat-hint>
+          @if (form.controls.coverImageUrl.hasError('pattern')) {
+            <mat-error>Must be a valid http(s) URL</mat-error>
+          }
+        </mat-form-field>
+        <input
+          #coverInput
+          type="file"
+          accept="image/*"
+          hidden
+          (change)="onUpload($event)"
+        />
         @if (data) {
           <app-section-logs [logs]="logs()"></app-section-logs>
         }
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button mat-button type="button" mat-dialog-close>Cancel</button>
-        <button mat-flat-button color="primary" type="submit" [disabled]="saving()">Save</button>
+        <button
+          mat-flat-button
+          color="primary"
+          type="submit"
+          [disabled]="saving() || uploadingCover()"
+        >
+          Save
+        </button>
       </mat-dialog-actions>
     </form>
   `,
@@ -89,12 +127,14 @@ import { slugValidator } from '../../shared/validators/slug.validator';
 export class ActivityFormDialog {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(ContentApi);
+  private readonly cfMedia = inject(CloudflareMediaService);
   private readonly notify = inject(NotificationService);
   readonly data = inject<Activity | null>(MAT_DIALOG_DATA);
   private readonly ref = inject<MatDialogRef<ActivityFormDialog, boolean>>(MatDialogRef);
 
   readonly statuses = CONTENT_STATUSES;
   readonly saving = signal(false);
+  readonly uploadingCover = signal(false);
   readonly logs = signal<LogEntry[]>([]);
 
   constructor() {
@@ -110,8 +150,37 @@ export class ActivityFormDialog {
     eventDate: this.fb.control<Date | null>(this.data?.eventDate ? new Date(this.data.eventDate) : null),
     location: [this.data?.location ?? emptyLocalizedText()],
     description: [this.data?.description ?? emptyLocalizedText()],
-    coverImageId: this.fb.control<string | null>(this.data?.coverImageId ?? null),
+    coverImageUrl: [this.data?.coverImageUrl ?? '', Validators.pattern(/^https?:\/\/.+/)],
   });
+
+  /** File name prefix that ties an uploaded asset back to this activity. */
+  baseName(): string {
+    return this.form.controls.slug.value || slugify(this.form.controls.title.value.en) || 'activity';
+  }
+
+  onUpload(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+    const ext = file.name.includes('.') ? file.name.slice(file.name.lastIndexOf('.')) : '';
+    const renamed = new File([file], `${this.baseName()}-cover${ext}`, { type: file.type });
+    this.uploadingCover.set(true);
+    this.cfMedia.upload(renamed, 'activities').subscribe({
+      next: (asset) => {
+        this.form.controls.coverImageUrl.setValue(asset.url);
+        this.form.controls.coverImageUrl.markAsDirty();
+        this.uploadingCover.set(false);
+        this.notify.success(`Uploaded as "${asset.fileName}"`);
+        input.value = '';
+      },
+      error: () => {
+        this.uploadingCover.set(false);
+        input.value = '';
+      },
+    });
+  }
 
   save(): void {
     if (this.form.invalid || this.saving()) {
@@ -126,7 +195,7 @@ export class ActivityFormDialog {
       status: raw.status,
       description: raw.description,
       location: raw.location,
-      coverImageId: raw.coverImageId ?? undefined,
+      coverImageUrl: raw.coverImageUrl.trim() || undefined,
       eventDate: raw.eventDate ? raw.eventDate.toISOString().slice(0, 10) : undefined,
     };
     const req = this.data

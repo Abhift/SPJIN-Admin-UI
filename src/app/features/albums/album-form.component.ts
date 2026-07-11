@@ -13,6 +13,8 @@ import { NotificationService } from '../../core/services/notification.service';
 import { Album, AlbumImage, AlbumRequest } from '../../core/models/content.models';
 import { CONTENT_STATUSES, ContentStatus, LocalizedText, emptyLocalizedText } from '../../core/models/api.models';
 import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
+import { LanguageSwitchComponent } from '../../shared/components/language-switch/language-switch.component';
+import { LocalizedLangService } from '../../shared/services/localized-lang.service';
 import { MediaPickerComponent } from '../../shared/components/media-picker/media-picker.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { MediaPickerDialogComponent } from '../../shared/components/media-picker/media-picker-dialog.component';
@@ -34,10 +36,12 @@ import { slugValidator, slugify } from '../../shared/validators/slug.validator';
     MatButtonModule,
     MatIconModule,
     LocalizedInputComponent,
+    LanguageSwitchComponent,
     MediaPickerComponent,
     PageHeaderComponent,
     SectionLogsComponent,
   ],
+  providers: [LocalizedLangService],
   templateUrl: './album-form.component.html',
   styleUrl: './album-form.component.scss',
 })

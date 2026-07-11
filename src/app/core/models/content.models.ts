@@ -96,9 +96,10 @@ export interface Book {
   slug: string;
   title: LocalizedText;
   author?: LocalizedText;
+  category?: string;
   description?: LocalizedText;
-  coverImageId?: string;
-  fileId?: string;
+  coverImageUrl?: string;
+  fileUrl?: string;
   status: ContentStatus;
   createdAt?: string;
   updatedAt?: string;
@@ -109,9 +110,10 @@ export interface BookRequest {
   slug: string;
   title: LocalizedText;
   author?: LocalizedText;
+  category?: string;
   description?: LocalizedText;
-  coverImageId?: string;
-  fileId?: string;
+  coverImageUrl?: string;
+  fileUrl?: string;
   status: ContentStatus;
 }
 
@@ -184,7 +186,7 @@ export interface Activity {
   slug: string;
   title: LocalizedText;
   description?: LocalizedText;
-  coverImageId?: string;
+  coverImageUrl?: string;
   eventDate?: string;
   location?: LocalizedText;
   status: ContentStatus;
@@ -197,7 +199,7 @@ export interface ActivityRequest {
   slug: string;
   title: LocalizedText;
   description?: LocalizedText;
-  coverImageId?: string;
+  coverImageUrl?: string;
   eventDate?: string;
   location?: LocalizedText;
   status: ContentStatus;

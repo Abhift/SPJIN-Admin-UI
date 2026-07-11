@@ -1,18 +1,7 @@
 <div class="localized-input">
-  <div class="lang-bar">
+  @if (label) {
     <span class="field-label">{{ label }}@if (required) {<span class="req">&nbsp;*</span>}</span>
-    <mat-button-toggle-group
-      [value]="lang()"
-      (change)="switchLang($event.value)"
-      [hideSingleSelectionIndicator]="true"
-      aria-label="Language"
-    >
-      <mat-button-toggle value="en">EN</mat-button-toggle>
-      <mat-button-toggle value="hi">हिं</mat-button-toggle>
-      <mat-button-toggle value="ne">नेपा</mat-button-toggle>
-      <mat-button-toggle value="gu">ગુજ</mat-button-toggle>
-    </mat-button-toggle-group>
-  </div>
+  }
 
   <mat-form-field class="full-width" appearance="outline">
     @if (multiline) {
