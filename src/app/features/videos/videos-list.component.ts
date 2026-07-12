@@ -49,7 +49,8 @@ export class VideosListComponent {
 
   readonly columns: TableColumn<Video>[] = [
     { key: 'title', header: 'Title', value: (r) => r.title.en },
-    { key: 'youtubeVideoId', header: 'YouTube Video ID', value: (r) => r.youtubeVideoId },
+    { key: 'youtubeVideoId', header: 'Video / Playlist ID', value: (r) => r.youtubeVideoId ?? r.playlistId ?? '' },
+    { key: 'displayOrder', header: 'Order', value: (r) => String(r.displayOrder) },
     { key: 'status', header: 'Status', type: 'status', value: (r) => r.status },
   ];
 
@@ -82,7 +83,7 @@ export class VideosListComponent {
 
   load(): void {
     this.loading.set(true);
-    this.api.videos.list({ page: this.pageIndex(), size: this.pageSize() }).subscribe({
+    this.api.videos.list({ page: this.pageIndex(), size: this.pageSize(), sort: 'displayOrder,asc' }).subscribe({
       next: (page) => {
         this.rows.set(page.content);
         this.total.set(page.totalElements);

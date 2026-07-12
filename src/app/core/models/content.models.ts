@@ -123,8 +123,10 @@ export interface Video {
   id: string;
   title: LocalizedText;
   description?: LocalizedText;
-  youtubeVideoId: string;
-  thumbnailId?: string;
+  youtubeVideoId?: string;
+  playlistId?: string;
+  thumbnailUrl?: string;
+  displayOrder: number;
   status: ContentStatus;
   createdAt?: string;
   updatedAt?: string;
@@ -134,8 +136,10 @@ export interface Video {
 export interface VideoRequest {
   title: LocalizedText;
   description?: LocalizedText;
-  youtubeVideoId: string;
-  thumbnailId?: string;
+  youtubeVideoId?: string;
+  playlistId?: string;
+  thumbnailUrl?: string;
+  displayOrder: number;
   status: ContentStatus;
 }
 
