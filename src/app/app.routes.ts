@@ -156,11 +156,31 @@ export const routes: Routes = [
           import('./features/settings/settings.component').then((m) => m.SettingsComponent),
       },
       {
-        path: 'media',
+        path: 'event-gallery',
         canActivate: [permissionGuard],
-        data: { permissions: ['media:manage'] },
+        data: { permissions: ['content:read'] },
         loadComponent: () =>
-          import('./features/media/media-library.component').then((m) => m.MediaLibraryComponent),
+          import('./features/event-gallery/event-gallery-list.component').then(
+            (m) => m.EventGalleryListComponent,
+          ),
+      },
+      {
+        path: 'event-gallery/new',
+        canActivate: [permissionGuard],
+        data: { permissions: ['content:write'] },
+        loadComponent: () =>
+          import('./features/event-gallery/event-gallery-form.component').then(
+            (m) => m.EventGalleryFormComponent,
+          ),
+      },
+      {
+        path: 'event-gallery/:id/edit',
+        canActivate: [permissionGuard],
+        data: { permissions: ['content:write'] },
+        loadComponent: () =>
+          import('./features/event-gallery/event-gallery-form.component').then(
+            (m) => m.EventGalleryFormComponent,
+          ),
       },
       {
         path: 'upload-media',

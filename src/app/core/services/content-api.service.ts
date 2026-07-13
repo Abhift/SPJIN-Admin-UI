@@ -13,6 +13,8 @@ import {
   BranchRequest,
   Category,
   CategoryRequest,
+  EventGallery,
+  EventGalleryRequest,
   Menu,
   MenuRequest,
   PageEntity,
@@ -47,6 +49,7 @@ export class ContentApi {
   readonly albums = new CrudClient<Album, AlbumRequest>(this.http, 'albums');
   readonly menus = new CrudClient<Menu, MenuRequest>(this.http, 'menus');
   readonly settings = new CrudClient<Setting, SettingRequest>(this.http, 'settings');
+  readonly eventGalleries = new CrudClient<EventGallery, EventGalleryRequest>(this.http, 'event-galleries');
 
   /** Article categories live under the articles resource. */
   listCategories(): Observable<Category[]> {

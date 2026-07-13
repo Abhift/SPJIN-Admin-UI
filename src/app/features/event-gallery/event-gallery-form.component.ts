@@ -9,8 +9,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ContentApi } from '../../core/services/content-api.service';
 import { NotificationService } from '../../core/services/notification.service';
-import { Album, AlbumImage, AlbumRequest } from '../../core/models/content.models';
-import { CONTENT_STATUSES, ContentStatus, LocalizedText, emptyLocalizedText } from '../../core/models/api.models';
+import { EventGallery, EventGalleryImage, EventGalleryRequest } from '../../core/models/content.models';
+import { CONTENT_STATUSES, ContentStatus, emptyLocalizedText } from '../../core/models/api.models';
 import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
 import { LanguageSwitchComponent } from '../../shared/components/language-switch/language-switch.component';
 import { LocalizedLangService } from '../../shared/services/localized-lang.service';
@@ -21,7 +21,7 @@ import { localizedTextValidator } from '../../shared/validators/localized-text.v
 import { slugValidator, slugify } from '../../shared/validators/slug.validator';
 
 @Component({
-  selector: 'app-album-form',
+  selector: 'app-event-gallery-form',
   standalone: true,
   imports: [
     ReactiveFormsModule,
@@ -37,10 +37,10 @@ import { slugValidator, slugify } from '../../shared/validators/slug.validator';
     SectionLogsComponent,
   ],
   providers: [LocalizedLangService],
-  templateUrl: './album-form.component.html',
-  styleUrl: './album-form.component.scss',
+  templateUrl: './event-gallery-form.component.html',
+  styleUrl: './event-gallery-form.component.scss',
 })
-export class AlbumFormComponent {
+export class EventGalleryFormComponent {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(ContentApi);
   private readonly notify = inject(NotificationService);
@@ -50,7 +50,7 @@ export class AlbumFormComponent {
   @Input() set id(value: string | undefined) {
     this._id = value ?? null;
     if (value) {
-      this.loadAlbum(value);
+      this.loadGallery(value);
     }
   }
 
@@ -62,17 +62,19 @@ export class AlbumFormComponent {
   readonly form = this.fb.nonNullable.group({
     title: [emptyLocalizedText(), localizedTextValidator(true)],
     slug: ['', [Validators.required, slugValidator()]],
+    heading: [emptyLocalizedText()],
+    details: [emptyLocalizedText()],
+    location: [''],
+    eventDate: [''],
     status: ['DRAFT' as ContentStatus],
-    description: [emptyLocalizedText()],
-    coverImageUrl: [''],
-    images: this.fb.array<ReturnType<AlbumFormComponent['imageGroup']>>([]),
+    images: this.fb.array<ReturnType<EventGalleryFormComponent['imageGroup']>>([]),
   });
 
   get images(): FormArray {
     return this.form.controls.images;
   }
 
-  private imageGroup(img: Partial<AlbumImage>) {
+  private imageGroup(img: Partial<EventGalleryImage> = {}) {
     return this.fb.nonNullable.group({
       imageUrl: [img.imageUrl ?? '', Validators.required],
       caption: [img.caption ?? emptyLocalizedText()],
@@ -96,24 +98,26 @@ export class AlbumFormComponent {
     this.images.removeAt(index);
   }
 
-  private loadAlbum(id: string): void {
+  private loadGallery(id: string): void {
     this.editing.set(true);
-    this.api.albums.get(id).subscribe((album) => {
-      this.logs.set(album.logs ?? []);
-      this.patch(album);
+    this.api.eventGalleries.get(id).subscribe((g) => {
+      this.logs.set(g.logs ?? []);
+      this.patch(g);
     });
   }
 
-  private patch(a: Album): void {
+  private patch(g: EventGallery): void {
     this.form.patchValue({
-      title: a.title,
-      slug: a.slug,
-      status: a.status,
-      description: a.description ?? emptyLocalizedText(),
-      coverImageUrl: a.coverImageUrl ?? '',
+      title: g.title,
+      slug: g.slug,
+      heading: g.heading ?? emptyLocalizedText(),
+      details: g.details ?? emptyLocalizedText(),
+      location: g.location ?? '',
+      eventDate: g.eventDate ?? '',
+      status: g.status,
     });
     this.images.clear();
-    for (const img of a.images ?? []) {
+    for (const img of g.images ?? []) {
       this.images.push(this.imageGroup(img));
     }
   }
@@ -126,29 +130,33 @@ export class AlbumFormComponent {
     }
     this.saving.set(true);
     const raw = this.form.getRawValue();
-    const body: AlbumRequest = {
-      title: raw.title,
+    const body: EventGalleryRequest = {
       slug: raw.slug,
+      title: raw.title,
+      heading: raw.heading,
+      details: raw.details,
+      location: raw.location || undefined,
+      eventDate: raw.eventDate || undefined,
       status: raw.status,
-      description: raw.description,
-      coverImageUrl: raw.coverImageUrl || undefined,
       images: raw.images.map((img, index) => ({
         imageUrl: img.imageUrl,
-        caption: img.caption as LocalizedText,
+        caption: img.caption,
         displayOrder: index,
       })),
     };
-    const req = this._id ? this.api.albums.update(this._id, body) : this.api.albums.create(body);
+    const req = this._id
+      ? this.api.eventGalleries.update(this._id, body)
+      : this.api.eventGalleries.create(body);
     req.subscribe({
       next: () => {
-        this.notify.success('Album saved');
-        void this.router.navigate(['/albums']);
+        this.notify.success('Event gallery saved');
+        void this.router.navigate(['/event-gallery']);
       },
       error: () => this.saving.set(false),
     });
   }
 
   cancel(): void {
-    void this.router.navigate(['/albums']);
+    void this.router.navigate(['/event-gallery']);
   }
 }

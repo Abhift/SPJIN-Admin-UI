@@ -12,7 +12,6 @@ import { emptyLocalizedText } from '../../core/models/api.models';
 import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
 import { LanguageSwitchComponent } from '../../shared/components/language-switch/language-switch.component';
 import { LocalizedLangService } from '../../shared/services/localized-lang.service';
-import { MediaPickerComponent } from '../../shared/components/media-picker/media-picker.component';
 import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
 import { localizedTextValidator } from '../../shared/validators/localized-text.validator';
 
@@ -27,7 +26,6 @@ import { localizedTextValidator } from '../../shared/validators/localized-text.v
     MatButtonModule,
     LocalizedInputComponent,
     LanguageSwitchComponent,
-    MediaPickerComponent,
     SectionLogsComponent,
   ],
   providers: [LocalizedLangService],
@@ -50,7 +48,10 @@ import { localizedTextValidator } from '../../shared/validators/localized-text.v
           [multiline]="true"
           [required]="true"
         ></app-localized-input>
-        <app-media-picker label="Avatar" formControlName="avatarId"></app-media-picker>
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Avatar URL</mat-label>
+          <input matInput formControlName="avatarUrl" placeholder="https://example.com/avatar.jpg" type="url" />
+        </mat-form-field>
         <mat-form-field class="full-width" appearance="outline">
           <mat-label>Display order</mat-label>
           <input matInput type="number" formControlName="displayOrder" />
@@ -86,7 +87,7 @@ export class TestimonialFormDialog {
     authorName: [this.data?.authorName ?? '', Validators.required],
     authorTitle: [this.data?.authorTitle ?? emptyLocalizedText()],
     body: [this.data?.body ?? emptyLocalizedText(), localizedTextValidator(true)],
-    avatarId: this.fb.control<string | null>(this.data?.avatarId ?? null),
+    avatarUrl: [this.data?.avatarUrl ?? ''],
     displayOrder: [this.data?.displayOrder ?? 0, Validators.required],
   });
 

@@ -60,7 +60,10 @@
         [required]="true"
       ></app-localized-input>
 
-      <app-media-picker label="Featured image" formControlName="featuredImageId"></app-media-picker>
+      <mat-form-field class="full-width" appearance="outline">
+        <mat-label>Featured image URL</mat-label>
+        <input matInput formControlName="featuredImageUrl" placeholder="https://example.com/image.jpg" type="url" />
+      </mat-form-field>
     </mat-card>
 
     <mat-accordion class="seo-panel">

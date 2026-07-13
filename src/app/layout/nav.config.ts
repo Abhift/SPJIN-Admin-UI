@@ -26,6 +26,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: 'Videos', icon: 'smart_display', route: '/videos', permissions: ['content:read'] },
       { label: 'Activities', icon: 'event', route: '/activities', permissions: ['content:read'] },
       { label: 'Albums', icon: 'photo_library', route: '/albums', permissions: ['content:read'] },
+      { label: 'Event Gallery', icon: 'collections', route: '/event-gallery', permissions: ['content:read'] },
     ],
   },
   {
@@ -45,7 +46,6 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     heading: 'System',
     items: [
-      { label: 'Media', icon: 'perm_media', route: '/media', permissions: ['media:manage'] },
       {
         label: 'Upload Media',
         icon: 'cloud_upload',

@@ -15,7 +15,6 @@ import { CONTENT_STATUSES, ContentStatus, SeoDto, emptyLocalizedText } from '../
 import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
 import { LanguageSwitchComponent } from '../../shared/components/language-switch/language-switch.component';
 import { LocalizedLangService } from '../../shared/services/localized-lang.service';
-import { MediaPickerComponent } from '../../shared/components/media-picker/media-picker.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
 import { LogEntry } from '../../core/models/audit.models';
@@ -36,7 +35,6 @@ import { slugValidator, slugify } from '../../shared/validators/slug.validator';
     MatExpansionModule,
     LocalizedInputComponent,
     LanguageSwitchComponent,
-    MediaPickerComponent,
     PageHeaderComponent,
     SectionLogsComponent,
   ],
@@ -69,7 +67,7 @@ export class ArticleFormComponent {
     slug: ['', [Validators.required, slugValidator()]],
     status: ['DRAFT' as ContentStatus],
     categoryId: this.fb.control<string | null>(null),
-    featuredImageId: this.fb.control<string | null>(null),
+    featuredImageUrl: [''],
     summary: [emptyLocalizedText()],
     content: [emptyLocalizedText(), localizedTextValidator(true)],
     seo: this.fb.nonNullable.group({
@@ -105,7 +103,7 @@ export class ArticleFormComponent {
       slug: a.slug,
       status: a.status,
       categoryId: a.categoryId ?? null,
-      featuredImageId: a.featuredImageId ?? null,
+      featuredImageUrl: a.featuredImageUrl ?? '',
       summary: a.summary ?? emptyLocalizedText(),
       content: a.content,
       seo: {
@@ -134,7 +132,7 @@ export class ArticleFormComponent {
       slug: raw.slug,
       status: raw.status,
       categoryId: raw.categoryId ?? undefined,
-      featuredImageId: raw.featuredImageId ?? undefined,
+      featuredImageUrl: raw.featuredImageUrl || undefined,
       summary: raw.summary,
       content: raw.content,
       seo,

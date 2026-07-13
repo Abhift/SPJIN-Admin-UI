@@ -1,12 +1,13 @@
 <div class="page-container">
   <app-page-header
-    [title]="editing() ? 'Edit album' : 'New album'"
-    subtitle="Photo gallery"
+    [title]="editing() ? 'Edit event gallery' : 'New event gallery'"
+    subtitle="Event photo gallery"
   ></app-page-header>
 
   <form [formGroup]="form" (ngSubmit)="save()">
     <mat-card class="form-card">
       <app-language-switch></app-language-switch>
+
       <app-localized-input
         label="Title"
         formControlName="title"
@@ -21,9 +22,10 @@
           @if (form.controls.slug.hasError('required')) {
             <mat-error>Slug is required</mat-error>
           } @else if (form.controls.slug.hasError('slug')) {
-            <mat-error>Invalid slug</mat-error>
+            <mat-error>Lowercase letters, numbers and hyphens only</mat-error>
           }
         </mat-form-field>
+
         <mat-form-field appearance="outline">
           <mat-label>Status</mat-label>
           <mat-select formControlName="status">
@@ -32,18 +34,29 @@
             }
           </mat-select>
         </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Event date</mat-label>
+          <input matInput type="date" formControlName="eventDate" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Location</mat-label>
+          <input matInput formControlName="location" placeholder="e.g. Mumbai, India" />
+        </mat-form-field>
       </div>
 
       <app-localized-input
-        label="Description"
-        formControlName="description"
-        [multiline]="true"
+        label="Heading"
+        formControlName="heading"
       ></app-localized-input>
 
-      <mat-form-field class="full-width" appearance="outline">
-        <mat-label>Cover image URL</mat-label>
-        <input matInput formControlName="coverImageUrl" placeholder="https://example.com/cover.jpg" type="url" />
-      </mat-form-field>
+      <app-localized-input
+        label="Details"
+        formControlName="details"
+        [multiline]="true"
+        [rows]="5"
+      ></app-localized-input>
     </mat-card>
 
     <mat-card class="form-card">
@@ -56,20 +69,28 @@
       </div>
 
       @if (images.length === 0) {
-        <p class="muted">No images added yet.</p>
+        <p class="muted">No images added yet. Click "Add image" to add image URLs.</p>
       }
 
-      <div class="image-list" formArrayName="images">
+      <div formArrayName="images">
         @for (row of images.controls; track $index) {
           <div class="image-row" [formGroupName]="$index">
+            <span class="image-index">{{ $index + 1 }}</span>
+
             <mat-form-field class="image-url-field" appearance="outline">
               <mat-label>Image URL</mat-label>
-              <input matInput formControlName="imageUrl" placeholder="https://example.com/image.jpg" type="url" />
+              <input matInput formControlName="imageUrl" placeholder="https://cdn.example.com/photo.jpg" type="url" />
               @if (row.get('imageUrl')?.hasError('required')) {
                 <mat-error>Image URL is required</mat-error>
               }
             </mat-form-field>
-            <app-localized-input label="Caption" formControlName="caption"></app-localized-input>
+
+            <app-localized-input
+              class="caption-field"
+              label="Caption (optional)"
+              formControlName="caption"
+            ></app-localized-input>
+
             <button
               mat-icon-button
               color="warn"
@@ -90,7 +111,9 @@
 
     <div class="card-actions-end actions">
       <button mat-button type="button" (click)="cancel()">Cancel</button>
-      <button mat-flat-button color="primary" type="submit" [disabled]="saving()">Save album</button>
+      <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+        Save event gallery
+      </button>
     </div>
   </form>
 </div>

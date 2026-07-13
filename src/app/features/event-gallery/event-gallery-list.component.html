@@ -1,0 +1,28 @@
+<div class="page-container">
+  <app-page-header title="Event Gallery" subtitle="Manage event photo galleries">
+    @if (canWrite) {
+      <button mat-flat-button color="primary" routerLink="/event-gallery/new">
+        <mat-icon>add</mat-icon>
+        New event gallery
+      </button>
+    }
+  </app-page-header>
+
+  @if (!loading() && rows().length === 0) {
+    <app-empty-state icon="collections" message="No event galleries yet" hint="Add your first event gallery." />
+  } @else {
+    <app-data-table
+      [columns]="columns"
+      [rows]="rows()"
+      [actions]="actions"
+      (action)="onAction($event)"
+    ></app-data-table>
+    <mat-paginator
+      [length]="total()"
+      [pageSize]="pageSize()"
+      [pageIndex]="pageIndex()"
+      [pageSizeOptions]="[10, 20, 50]"
+      (page)="onPage($event)"
+    ></mat-paginator>
+  }
+</div>

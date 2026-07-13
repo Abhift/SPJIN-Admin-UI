@@ -1,19 +1,5 @@
-import { ContentStatus, LocalizedText, MediaType, SeoDto } from './api.models';
+import { ContentStatus, LocalizedText, SeoDto } from './api.models';
 import { LogEntry } from './audit.models';
-
-/** Media library asset. */
-export interface MediaAsset {
-  id: string;
-  fileName: string;
-  contentType: string;
-  fileSize: number;
-  mediaType: MediaType;
-  width?: number;
-  height?: number;
-  duration?: number;
-  url: string;
-  createdAt: string;
-}
 
 /* ---------------------------------------------------------------- Pages */
 
@@ -69,7 +55,7 @@ export interface Article {
   summary?: LocalizedText;
   content: LocalizedText;
   categoryId?: string;
-  featuredImageId?: string;
+  featuredImageUrl?: string;
   status: ContentStatus;
   seo?: SeoDto;
   version?: number;
@@ -84,7 +70,7 @@ export interface ArticleRequest {
   summary?: LocalizedText;
   content: LocalizedText;
   categoryId?: string;
-  featuredImageId?: string;
+  featuredImageUrl?: string;
   status: ContentStatus;
   seo?: SeoDto;
 }
@@ -169,7 +155,7 @@ export interface Testimonial {
   authorName: string;
   authorTitle?: LocalizedText;
   body: LocalizedText;
-  avatarId?: string;
+  avatarUrl?: string;
   displayOrder: number;
   createdAt?: string;
   logs?: LogEntry[];
@@ -179,7 +165,7 @@ export interface TestimonialRequest {
   authorName: string;
   authorTitle?: LocalizedText;
   body: LocalizedText;
-  avatarId?: string;
+  avatarUrl?: string;
   displayOrder: number;
 }
 
@@ -240,10 +226,9 @@ export interface BranchRequest {
 
 export interface AlbumImage {
   id?: string;
-  mediaId: string;
+  imageUrl: string;
   caption?: LocalizedText;
   displayOrder: number;
-  url?: string;
 }
 
 export interface Album {
@@ -251,7 +236,7 @@ export interface Album {
   slug: string;
   title: LocalizedText;
   description?: LocalizedText;
-  coverImageId?: string;
+  coverImageUrl?: string;
   images: AlbumImage[];
   status: ContentStatus;
   createdAt?: string;
@@ -263,7 +248,7 @@ export interface AlbumRequest {
   slug: string;
   title: LocalizedText;
   description?: LocalizedText;
-  coverImageId?: string;
+  coverImageUrl?: string;
   images: AlbumImage[];
   status: ContentStatus;
 }
@@ -309,4 +294,40 @@ export interface SettingRequest {
   key: string;
   value: unknown;
   description?: string;
+}
+
+/* --------------------------------------------------------- Event Gallery */
+
+export interface EventGalleryImage {
+  id?: string;
+  imageUrl: string;
+  displayOrder: number;
+  caption?: LocalizedText;
+}
+
+export interface EventGallery {
+  id: string;
+  slug: string;
+  title: LocalizedText;
+  heading?: LocalizedText;
+  details?: LocalizedText;
+  location?: string;
+  eventDate?: string;
+  status: ContentStatus;
+  images: EventGalleryImage[];
+  imageCount?: number;
+  logs?: LogEntry[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface EventGalleryRequest {
+  slug: string;
+  title: LocalizedText;
+  heading?: LocalizedText;
+  details?: LocalizedText;
+  location?: string;
+  eventDate?: string;
+  status: ContentStatus;
+  images: EventGalleryImage[];
 }
