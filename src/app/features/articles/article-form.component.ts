@@ -8,8 +8,13 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ContentApi } from '../../core/services/content-api.service';
+import { CloudflareMediaService } from '../../core/services/cloudflare-media.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { MediaDeleteService } from '../../shared/services/media-delete.service';
+import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { Article, ArticleRequest, Category } from '../../core/models/content.models';
 import { CONTENT_STATUSES, ContentStatus, SeoDto, emptyLocalizedText } from '../../core/models/api.models';
 import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
@@ -33,21 +38,26 @@ import { slugValidator, slugify } from '../../shared/validators/slug.validator';
     MatButtonModule,
     MatIconModule,
     MatExpansionModule,
+    MatProgressBarModule,
+    MatTooltipModule,
     LocalizedInputComponent,
     LanguageSwitchComponent,
     PageHeaderComponent,
     SectionLogsComponent,
+    MediaUrlPipe,
   ],
   providers: [LocalizedLangService],
   templateUrl: './article-form.component.html',
+  styleUrl: './article-form.component.scss',
 })
 export class ArticleFormComponent {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(ContentApi);
+  private readonly cfMedia = inject(CloudflareMediaService);
   private readonly notify = inject(NotificationService);
+  private readonly mediaDelete = inject(MediaDeleteService);
   private readonly router = inject(Router);
 
-  /** Route param via withComponentInputBinding; empty for new. */
   private _id: string | null = null;
   @Input() set id(value: string | undefined) {
     this._id = value ?? null;
@@ -58,6 +68,7 @@ export class ArticleFormComponent {
 
   readonly editing = signal(false);
   readonly saving = signal(false);
+  readonly uploadingFeatured = signal(false);
   readonly categories = signal<Category[]>([]);
   readonly logs = signal<LogEntry[]>([]);
   readonly statuses = CONTENT_STATUSES;
@@ -87,6 +98,68 @@ export class ArticleFormComponent {
     if (!slugCtrl.dirty && titleEn) {
       slugCtrl.setValue(slugify(titleEn));
     }
+  }
+
+  onFeaturedImageFile(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.uploadingFeatured.set(true);
+    this.compressImage(file).then((compressed) => {
+      this.cfMedia.upload(compressed, 'articles').subscribe({
+        next: (asset) => {
+          this.form.controls.featuredImageUrl.setValue(asset.url);
+          this.uploadingFeatured.set(false);
+          input.value = '';
+        },
+        error: () => {
+          this.uploadingFeatured.set(false);
+          input.value = '';
+        },
+      });
+    });
+  }
+
+  removeFeaturedImage(): void {
+    const url = this.form.controls.featuredImageUrl.value;
+    this.mediaDelete.confirmRemove(url, () => {
+      this.form.controls.featuredImageUrl.setValue('');
+    });
+  }
+
+  private compressImage(file: File): Promise<File> {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith('image/')) {
+        resolve(file);
+        return;
+      }
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        canvas.getContext('2d')!.drawImage(img, 0, 0);
+        URL.revokeObjectURL(objectUrl);
+        canvas.toBlob(
+          (blob) => {
+            if (blob && blob.size < file.size) {
+              const name = file.name.replace(/\.[^.]+$/, '.webp');
+              resolve(new File([blob], name, { type: 'image/webp' }));
+            } else {
+              resolve(file);
+            }
+          },
+          'image/webp',
+          0.85,
+        );
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(file);
+      };
+      img.src = objectUrl;
+    });
   }
 
   private loadArticle(id: string): void {

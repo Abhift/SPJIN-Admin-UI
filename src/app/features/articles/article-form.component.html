@@ -60,10 +60,38 @@
         [required]="true"
       ></app-localized-input>
 
-      <mat-form-field class="full-width" appearance="outline">
-        <mat-label>Featured image URL</mat-label>
-        <input matInput formControlName="featuredImageUrl" placeholder="https://example.com/image.jpg" type="url" />
-      </mat-form-field>
+      <!-- Featured image upload -->
+      <div class="featured-image-section">
+        <span class="featured-image-label">Featured image</span>
+
+        <input type="file" accept="image/*" hidden #featuredInput (change)="onFeaturedImageFile($event)" />
+
+        @if (form.controls.featuredImageUrl.value) {
+          <div class="featured-preview">
+            <img
+              class="featured-thumb"
+              [src]="form.controls.featuredImageUrl.value | mediaUrl"
+              alt="Featured image preview"
+              loading="lazy"
+            />
+            <div class="featured-actions">
+              <button mat-stroked-button color="warn" type="button" matTooltip="Remove image" (click)="removeFeaturedImage()">
+                <mat-icon>delete</mat-icon> Remove
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div class="featured-empty">
+            @if (uploadingFeatured()) {
+              <mat-progress-bar mode="indeterminate" style="width:240px"></mat-progress-bar>
+            } @else {
+              <button mat-stroked-button type="button" (click)="featuredInput.click()">
+                <mat-icon>add_photo_alternate</mat-icon> Upload featured image
+              </button>
+            }
+          </div>
+        }
+      </div>
     </mat-card>
 
     <mat-accordion class="seo-panel">

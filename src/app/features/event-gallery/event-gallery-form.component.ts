@@ -98,6 +98,8 @@ export class EventGalleryFormComponent {
     const file = input.files?.[0];
     if (!file) return;
 
+    const oldUrl = this.images.at(index).get('imageUrl')!.value as string;
+
     this.uploadingIndex.set(index);
     this.compressImage(file).then((compressed) => {
       this.cfMedia.upload(compressed, 'event-gallery').subscribe({
@@ -105,6 +107,10 @@ export class EventGalleryFormComponent {
           this.images.at(index).get('imageUrl')!.setValue(asset.url);
           this.uploadingIndex.set(null);
           input.value = '';
+          // Trash the previous image immediately after the new one is uploaded
+          if (oldUrl && oldUrl.startsWith('/uploads/')) {
+            this.api.trashFile(oldUrl).subscribe();
+          }
         },
         error: () => {
           this.uploadingIndex.set(null);

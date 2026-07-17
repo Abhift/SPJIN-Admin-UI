@@ -8,9 +8,12 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ContentApi } from '../../core/services/content-api.service';
 import { CloudflareMediaService } from '../../core/services/cloudflare-media.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { MediaDeleteService } from '../../shared/services/media-delete.service';
+import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { Book, BookRequest } from '../../core/models/content.models';
 import { CONTENT_STATUSES, emptyLocalizedText } from '../../core/models/api.models';
 import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
@@ -18,7 +21,7 @@ import { LanguageSwitchComponent } from '../../shared/components/language-switch
 import { LocalizedLangService } from '../../shared/services/localized-lang.service';
 import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
 import { localizedTextValidator } from '../../shared/validators/localized-text.validator';
-import { slugValidator, slugify } from '../../shared/validators/slug.validator';
+import { slugValidator } from '../../shared/validators/slug.validator';
 
 @Component({
   selector: 'app-book-form-dialog',
@@ -32,9 +35,11 @@ import { slugValidator, slugify } from '../../shared/validators/slug.validator';
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
+    MatProgressBarModule,
     LocalizedInputComponent,
     LanguageSwitchComponent,
     SectionLogsComponent,
+    MediaUrlPipe,
   ],
   providers: [LocalizedLangService],
   template: `
@@ -76,34 +81,50 @@ import { slugValidator, slugify } from '../../shared/validators/slug.validator';
           formControlName="description"
           [multiline]="true"
         ></app-localized-input>
-        <mat-form-field class="full-width" appearance="outline">
-          <mat-label>Cover image URL</mat-label>
-          <input matInput formControlName="coverImageUrl" placeholder="https://... or upload" />
-          <button
-            mat-icon-button
-            matSuffix
-            type="button"
-            matTooltip="Upload cover image"
-            [disabled]="uploadingCover()"
-            (click)="coverInput.click()"
-          >
-            <mat-icon>{{ uploadingCover() ? 'hourglass_top' : 'cloud_upload' }}</mat-icon>
-          </button>
-          <mat-hint>Uploads are named after the slug, e.g. "{{ baseName() }}-cover"</mat-hint>
-          @if (form.controls.coverImageUrl.hasError('pattern')) {
-            <mat-error>Must be a valid http(s) URL</mat-error>
+
+        <!-- Cover image upload -->
+        <div class="cover-section">
+          <span class="cover-label">Cover image</span>
+          <input type="file" accept="image/*" hidden #coverInput (change)="onCoverFile($event)" />
+
+          @if (form.controls.coverImageUrl.value) {
+            <div class="cover-preview">
+              <img
+                class="cover-thumb"
+                [src]="form.controls.coverImageUrl.value | mediaUrl"
+                alt="Cover preview"
+                loading="lazy"
+              />
+              <div class="cover-actions">
+                @if (uploadingCover()) {
+                  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+                } @else {
+                  <button mat-stroked-button type="button" matTooltip="Replace cover" (click)="coverInput.click()">
+                    <mat-icon>cloud_upload</mat-icon> Replace
+                  </button>
+                  <button mat-stroked-button color="warn" type="button" matTooltip="Remove cover" (click)="removeCover()">
+                    <mat-icon>delete</mat-icon> Remove
+                  </button>
+                }
+              </div>
+            </div>
+          } @else {
+            <div class="cover-empty">
+              @if (uploadingCover()) {
+                <mat-progress-bar mode="indeterminate" style="width:240px"></mat-progress-bar>
+              } @else {
+                <button mat-stroked-button type="button" (click)="coverInput.click()">
+                  <mat-icon>add_photo_alternate</mat-icon> Upload cover image
+                </button>
+              }
+            </div>
           }
-        </mat-form-field>
-        <input
-          #coverInput
-          type="file"
-          accept="image/*"
-          hidden
-          (change)="onUpload($event, 'cover')"
-        />
+        </div>
+
+        <!-- PDF upload -->
         <mat-form-field class="full-width" appearance="outline">
-          <mat-label>Book file URL (PDF)</mat-label>
-          <input matInput formControlName="fileUrl" placeholder="https://... or upload" />
+          <mat-label>Book file (PDF)</mat-label>
+          <input matInput formControlName="fileUrl" placeholder="Upload a PDF or paste URL" />
           <button
             mat-icon-button
             matSuffix
@@ -112,20 +133,11 @@ import { slugValidator, slugify } from '../../shared/validators/slug.validator';
             [disabled]="uploadingFile()"
             (click)="pdfInput.click()"
           >
-            <mat-icon>{{ uploadingFile() ? 'hourglass_top' : 'cloud_upload' }}</mat-icon>
+            <mat-icon>{{ uploadingFile() ? 'hourglass_top' : 'upload_file' }}</mat-icon>
           </button>
-          <mat-hint>Uploads are named after the slug, e.g. "{{ baseName() }}.pdf"</mat-hint>
-          @if (form.controls.fileUrl.hasError('pattern')) {
-            <mat-error>Must be a valid http(s) URL</mat-error>
-          }
         </mat-form-field>
-        <input
-          #pdfInput
-          type="file"
-          accept="application/pdf"
-          hidden
-          (change)="onUpload($event, 'pdf')"
-        />
+        <input #pdfInput type="file" accept="application/pdf" hidden (change)="onPdfFile($event)" />
+
         @if (data) {
           <app-section-logs [logs]="logs()"></app-section-logs>
         }
@@ -142,16 +154,27 @@ import { slugValidator, slugify } from '../../shared/validators/slug.validator';
         </button>
       </mat-dialog-actions>
     </form>
+
+    <style>
+      .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+      .full-width { width: 100%; }
+      .cover-section { display: flex; flex-direction: column; gap: 10px; margin: 8px 0 16px; }
+      .cover-label { font-size: 12px; color: rgba(0,0,0,0.6); font-weight: 500; }
+      .cover-preview { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+      .cover-thumb { width: 120px; height: 160px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(0,0,0,0.12); }
+      .cover-actions { display: flex; flex-direction: column; gap: 8px; justify-content: center; }
+      .cover-empty { display: flex; align-items: center; }
+    </style>
   `,
 })
 export class BookFormDialog {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(ContentApi);
+  private readonly cfMedia = inject(CloudflareMediaService);
   private readonly notify = inject(NotificationService);
+  private readonly mediaDelete = inject(MediaDeleteService);
   readonly data = inject<Book | null>(MAT_DIALOG_DATA);
   private readonly ref = inject<MatDialogRef<BookFormDialog, boolean>>(MatDialogRef);
-
-  private readonly cfMedia = inject(CloudflareMediaService);
 
   readonly statuses = CONTENT_STATUSES;
   readonly saving = signal(false);
@@ -172,40 +195,93 @@ export class BookFormDialog {
     author: [this.data?.author ?? emptyLocalizedText()],
     category: [this.data?.category ?? ''],
     description: [this.data?.description ?? emptyLocalizedText()],
-    coverImageUrl: [this.data?.coverImageUrl ?? '', Validators.pattern(/^https?:\/\/.+/)],
-    fileUrl: [this.data?.fileUrl ?? '', Validators.pattern(/^https?:\/\/.+/)],
+    coverImageUrl: [this.data?.coverImageUrl ?? ''],
+    fileUrl: [this.data?.fileUrl ?? ''],
   });
 
-  /** File name prefix that ties an uploaded asset back to this book. */
-  baseName(): string {
-    return this.form.controls.slug.value || slugify(this.form.controls.title.value.en) || 'book';
-  }
-
-  onUpload(event: Event, kind: 'cover' | 'pdf'): void {
+  onCoverFile(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    if (!file) {
-      return;
-    }
-    const ext = file.name.includes('.') ? file.name.slice(file.name.lastIndexOf('.')) : '';
-    const name = kind === 'cover' ? `${this.baseName()}-cover${ext}` : `${this.baseName()}${ext}`;
-    const renamed = new File([file], name, { type: file.type });
-    const uploading = kind === 'cover' ? this.uploadingCover : this.uploadingFile;
-    const control =
-      kind === 'cover' ? this.form.controls.coverImageUrl : this.form.controls.fileUrl;
-    uploading.set(true);
-    this.cfMedia.upload(renamed, 'books').subscribe({
+    if (!file) return;
+    const oldUrl = this.form.controls.coverImageUrl.value;
+    this.uploadingCover.set(true);
+    this.compressImage(file).then((compressed) => {
+      this.cfMedia.upload(compressed, 'books').subscribe({
+        next: (asset) => {
+          this.form.controls.coverImageUrl.setValue(asset.url);
+          this.uploadingCover.set(false);
+          input.value = '';
+          if (oldUrl && oldUrl.startsWith('/uploads/')) {
+            this.api.trashFile(oldUrl).subscribe();
+          }
+        },
+        error: () => {
+          this.uploadingCover.set(false);
+          input.value = '';
+        },
+      });
+    });
+  }
+
+  removeCover(): void {
+    const url = this.form.controls.coverImageUrl.value;
+    this.mediaDelete.confirmRemove(url, () => {
+      this.form.controls.coverImageUrl.setValue('');
+    });
+  }
+
+  onPdfFile(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.uploadingFile.set(true);
+    this.cfMedia.upload(file, 'books').subscribe({
       next: (asset) => {
-        control.setValue(asset.url);
-        control.markAsDirty();
-        uploading.set(false);
-        this.notify.success(`Uploaded as "${asset.fileName}"`);
+        this.form.controls.fileUrl.setValue(asset.url);
+        this.form.controls.fileUrl.markAsDirty();
+        this.uploadingFile.set(false);
+        this.notify.success(`PDF uploaded`);
         input.value = '';
       },
       error: () => {
-        uploading.set(false);
+        this.uploadingFile.set(false);
         input.value = '';
       },
+    });
+  }
+
+  private compressImage(file: File): Promise<File> {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith('image/')) {
+        resolve(file);
+        return;
+      }
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        canvas.getContext('2d')!.drawImage(img, 0, 0);
+        URL.revokeObjectURL(objectUrl);
+        canvas.toBlob(
+          (blob) => {
+            if (blob && blob.size < file.size) {
+              const name = file.name.replace(/\.[^.]+$/, '.webp');
+              resolve(new File([blob], name, { type: 'image/webp' }));
+            } else {
+              resolve(file);
+            }
+          },
+          'image/webp',
+          0.85,
+        );
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(file);
+      };
+      img.src = objectUrl;
     });
   }
 
