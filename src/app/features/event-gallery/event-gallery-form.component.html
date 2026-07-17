@@ -80,7 +80,7 @@
               @if (row.get('imageUrl')?.value) {
                 <img
                   class="image-thumb"
-                  [src]="row.get('imageUrl')?.value"
+                  [src]="row.get('imageUrl')?.value | mediaUrl"
                   alt="Preview"
                   loading="lazy"
                 />

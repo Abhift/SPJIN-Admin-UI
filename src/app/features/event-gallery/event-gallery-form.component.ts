@@ -23,6 +23,7 @@ import { SectionLogsComponent } from '../../shared/components/section-logs/secti
 import { LogEntry } from '../../core/models/audit.models';
 import { localizedTextValidator } from '../../shared/validators/localized-text.validator';
 import { slugValidator, slugify } from '../../shared/validators/slug.validator';
+import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 
 @Component({
   selector: 'app-event-gallery-form',
@@ -41,6 +42,7 @@ import { slugValidator, slugify } from '../../shared/validators/slug.validator';
     LanguageSwitchComponent,
     PageHeaderComponent,
     SectionLogsComponent,
+    MediaUrlPipe,
   ],
   providers: [LocalizedLangService],
   templateUrl: './event-gallery-form.component.html',

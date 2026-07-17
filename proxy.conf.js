@@ -10,5 +10,11 @@ module.exports = {
         proxyReq.removeHeader('referer');
       });
     }
+  },
+  '/uploads': {
+    target: 'http://localhost:8080',
+    secure: false,
+    changeOrigin: true,
+    logLevel: 'debug',
   }
 };
