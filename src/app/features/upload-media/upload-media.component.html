@@ -1,117 +1,120 @@
 <div class="page-container">
   <app-page-header
-    title="Upload Media"
-    subtitle="Upload images and documents to Cloudflare R2 and copy URLs for use in section data"
+    title="Media Library"
+    subtitle="Upload and manage images and documents organised by section"
   ></app-page-header>
 
-  <!-- Upload panel -->
-  <div class="upload-panel">
-    <div class="upload-controls">
-      <mat-form-field appearance="outline" class="section-select">
-        <mat-label>Section type</mat-label>
-        <mat-select [(ngModel)]="uploadSectionType">
-          @for (type of sectionTypes; track type) {
-            <mat-option [value]="type">{{ type | titlecase }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  }
 
-      <button
-        mat-flat-button
-        color="primary"
-        (click)="fileInput.click()"
-        [disabled]="uploading() || compressing()"
-        class="upload-btn"
-      >
-        <mat-icon>cloud_upload</mat-icon>
-        {{ compressing() ? 'Compressing…' : uploading() ? 'Uploading…' : 'Upload file' }}
-      </button>
-      <input
-        #fileInput
-        type="file"
-        accept="image/*,.pdf,.doc,.docx"
-        hidden
-        (change)="onFile($event)"
-      />
+  <!-- ── Root: folder grid ── -->
+  @if (!activeFolder()) {
+    <div class="folder-grid">
+      @for (type of sectionTypes; track type) {
+        <button class="folder-card" type="button" (click)="enterFolder(type)">
+          <mat-icon class="folder-icon">{{ folderIcon(type) }}</mat-icon>
+          <span class="folder-name">{{ type | titlecase }}</span>
+          <span class="folder-count">
+            {{ folderCounts()[type] }} file{{ folderCounts()[type] === 1 ? '' : 's' }}
+          </span>
+        </button>
+      }
+    </div>
+  }
+
+  <!-- ── Inside a folder ── -->
+  @if (activeFolder(); as folder) {
+
+    <!-- Breadcrumb + upload controls -->
+    <div class="folder-header">
+      <div class="breadcrumb">
+        <button mat-icon-button type="button" (click)="exitFolder()" matTooltip="Back to folders">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <span class="breadcrumb-root" (click)="exitFolder()">Media</span>
+        <mat-icon class="breadcrumb-sep">chevron_right</mat-icon>
+        <span class="breadcrumb-active">
+          <mat-icon class="breadcrumb-folder-icon">{{ folderIcon(folder) }}</mat-icon>
+          {{ folder | titlecase }}
+        </span>
+      </div>
+
+      <div class="upload-controls">
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          (click)="fileInput.click()"
+          [disabled]="uploading() || compressing()"
+        >
+          <mat-icon>cloud_upload</mat-icon>
+          {{ compressing() ? 'Compressing…' : uploading() ? 'Uploading…' : 'Upload to ' + (folder | titlecase) }}
+        </button>
+        <input
+          #fileInput
+          type="file"
+          accept="image/*,.pdf,.doc,.docx"
+          hidden
+          (change)="onFile($event)"
+        />
+      </div>
     </div>
 
     @if (compressing() || uploading()) {
       <mat-progress-bar mode="indeterminate" class="upload-progress"></mat-progress-bar>
     }
-  </div>
 
-  <!-- Section type filter -->
-  <div class="filter-bar">
-    <button
-      mat-button
-      class="filter-chip"
-      [class.active]="selectedFilter() === 'all'"
-      (click)="selectedFilter.set('all')"
-    >
-      All ({{ assets().length }})
-    </button>
-    @for (type of sectionTypes; track type) {
-      @if (countByType(type) > 0) {
-        <button
-          mat-button
-          class="filter-chip"
-          [class.active]="selectedFilter() === type"
-          (click)="selectedFilter.set(type)"
-        >
-          {{ type | titlecase }} ({{ countByType(type) }})
-        </button>
-      }
-    }
-  </div>
+    <!-- Files in folder -->
+    @if (!loading()) {
+      @if (folderAssets().length === 0) {
+        <app-empty-state
+          icon="{{ folderIcon(folder) }}"
+          message="No files in {{ folder | titlecase }} yet. Upload one above."
+        ></app-empty-state>
+      } @else {
+        <div class="asset-grid">
+          @for (asset of folderAssets(); track asset.id) {
+            <div class="asset-card">
+              <div class="asset-preview">
+                @if (isImage(asset)) {
+                  <img [src]="asset.url" [alt]="asset.fileName" loading="lazy" />
+                } @else {
+                  <mat-icon class="doc-icon">{{ fileIcon(asset) }}</mat-icon>
+                }
+              </div>
 
-  <!-- Assets grid -->
-  @if (loading()) {
-    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-  } @else if (filtered().length === 0) {
-    <app-empty-state
-      icon="cloud_upload"
-      message="No files uploaded yet. Select a section type and upload a file above."
-    ></app-empty-state>
-  } @else {
-    <div class="asset-grid">
-      @for (asset of filtered(); track asset.id) {
-        <div class="asset-card">
-          <div class="asset-preview">
-            @if (isImage(asset)) {
-              <img [src]="asset.url" [alt]="asset.fileName" loading="lazy" />
-            } @else {
-              <mat-icon class="doc-icon">{{ fileIcon(asset) }}</mat-icon>
-            }
-            <span class="section-badge">{{ asset.sectionType | titlecase }}</span>
-          </div>
+              <div class="asset-body">
+                <p class="asset-name" [matTooltip]="asset.fileName">{{ asset.fileName }}</p>
+                <p class="asset-meta">{{ formatSize(asset.fileSize) }} · {{ asset.uploadedAt | date: 'dd MMM yyyy' }}</p>
+                <p class="asset-url" [matTooltip]="asset.url">{{ asset.url }}</p>
+              </div>
 
-          <div class="asset-body">
-            <p class="asset-name" [matTooltip]="asset.fileName">{{ asset.fileName }}</p>
-            <p class="asset-meta">{{ formatSize(asset.fileSize) }} · {{ asset.uploadedAt | date: 'dd MMM yyyy' }}</p>
-            <p class="asset-url" [matTooltip]="asset.url">{{ asset.url }}</p>
-          </div>
-
-          <div class="asset-actions">
-            <button
-              mat-stroked-button
-              class="copy-btn"
-              (click)="copyUrl(asset.url)"
-              matTooltip="Copy Cloudflare URL"
-            >
-              <mat-icon>content_copy</mat-icon>
-              Copy URL
-            </button>
-            <button
-              mat-icon-button
-              color="warn"
-              (click)="remove(asset)"
-              matTooltip="Delete from Cloudflare"
-            >
-              <mat-icon>delete_outline</mat-icon>
-            </button>
-          </div>
+              <div class="asset-actions">
+                <button
+                  mat-stroked-button
+                  class="copy-btn"
+                  type="button"
+                  (click)="copyUrl(asset.url)"
+                  matTooltip="Copy URL"
+                >
+                  <mat-icon>content_copy</mat-icon>
+                  Copy URL
+                </button>
+                <button
+                  mat-icon-button
+                  color="warn"
+                  type="button"
+                  (click)="remove(asset)"
+                  matTooltip="Delete"
+                >
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              </div>
+            </div>
+          }
         </div>
       }
-    </div>
+    }
   }
 </div>

@@ -1,61 +1,112 @@
-.upload-panel {
-  background: #fff;
+/* ── Folder grid (root view) ── */
+.folder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.folder-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 12px 20px;
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 12px;
-  padding: 20px 24px;
-  margin-bottom: 20px;
+  background: #fff;
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s, background 0.15s;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border-color: #1565c0;
+    background: #f5f8ff;
+  }
+}
+
+.folder-icon {
+  font-size: 40px;
+  width: 40px;
+  height: 40px;
+  color: #1565c0;
+}
+
+.folder-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.8);
+  text-align: center;
+  word-break: break-word;
+}
+
+.folder-count {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+/* ── Folder header (breadcrumb + upload) ── */
+.folder-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+.breadcrumb-root {
+  color: #1565c0;
+  cursor: pointer;
+  font-weight: 500;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.breadcrumb-sep {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.breadcrumb-active {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.breadcrumb-folder-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #1565c0;
 }
 
 .upload-controls {
   display: flex;
   align-items: center;
   gap: 16px;
-  flex-wrap: wrap;
-}
-
-.section-select {
-  width: 200px;
-  margin-bottom: -1.25em;
-}
-
-.upload-btn {
-  height: 56px;
-  padding: 0 24px;
-  gap: 8px;
 }
 
 .upload-progress {
-  margin-top: 12px;
+  margin-bottom: 16px;
   border-radius: 4px;
 }
 
-/* Filter bar */
-.filter-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 20px;
-}
-
-.filter-chip {
-  border-radius: 20px;
-  font-size: 0.82rem;
-  min-width: unset;
-  padding: 0 14px;
-  height: 32px;
-  line-height: 32px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  background: #fff;
-  transition: background 0.15s, color 0.15s;
-
-  &.active {
-    background: #1565c0;
-    color: #fff;
-    border-color: #1565c0;
-  }
-}
-
-/* Asset grid */
+/* ── Asset grid ── */
 .asset-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -97,19 +148,6 @@
   width: 48px;
   height: 48px;
   color: #90a4ae;
-}
-
-.section-badge {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background: rgba(21, 101, 192, 0.85);
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 10px;
-  letter-spacing: 0.03em;
 }
 
 .asset-body {

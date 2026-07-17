@@ -82,4 +82,9 @@ export class ContentApi {
       .set('size', String(query.size ?? 100));
     return this.http.get<Page<Setting>>(`${environment.apiBase}/admin/settings`, { params });
   }
+
+  /** Immediately moves a local upload file to uploadDeleted/ (soft-delete). */
+  trashFile(url: string): Observable<void> {
+    return this.http.post<void>(`${environment.apiBase}/admin/files/trash`, { url });
+  }
 }

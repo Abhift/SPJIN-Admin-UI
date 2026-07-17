@@ -7,7 +7,11 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MediaDeleteService } from '../../shared/services/media-delete.service';
 import { ContentApi } from '../../core/services/content-api.service';
+import { CloudflareMediaService } from '../../core/services/cloudflare-media.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { EventGallery, EventGalleryImage, EventGalleryRequest } from '../../core/models/content.models';
 import { CONTENT_STATUSES, ContentStatus, emptyLocalizedText } from '../../core/models/api.models';
@@ -31,6 +35,8 @@ import { slugValidator, slugify } from '../../shared/validators/slug.validator';
     MatSelectModule,
     MatButtonModule,
     MatIconModule,
+    MatProgressBarModule,
+    MatTooltipModule,
     LocalizedInputComponent,
     LanguageSwitchComponent,
     PageHeaderComponent,
@@ -43,8 +49,10 @@ import { slugValidator, slugify } from '../../shared/validators/slug.validator';
 export class EventGalleryFormComponent {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(ContentApi);
+  private readonly cfMedia = inject(CloudflareMediaService);
   private readonly notify = inject(NotificationService);
   private readonly router = inject(Router);
+  private readonly mediaDelete = inject(MediaDeleteService);
 
   private _id: string | null = null;
   @Input() set id(value: string | undefined) {
@@ -58,6 +66,7 @@ export class EventGalleryFormComponent {
   readonly saving = signal(false);
   readonly statuses = CONTENT_STATUSES;
   readonly logs = signal<LogEntry[]>([]);
+  readonly uploadingIndex = signal<number | null>(null);
 
   readonly form = this.fb.nonNullable.group({
     title: [emptyLocalizedText(), localizedTextValidator(true)],
@@ -78,7 +87,63 @@ export class EventGalleryFormComponent {
     return this.fb.nonNullable.group({
       imageUrl: [img.imageUrl ?? '', Validators.required],
       caption: [img.caption ?? emptyLocalizedText()],
-      displayOrder: [img.displayOrder ?? this.images.length],
+      displayOrder: [img.displayOrder ?? this.images.length + 1],
+    });
+  }
+
+  onImageFile(index: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    this.uploadingIndex.set(index);
+    this.compressImage(file).then((compressed) => {
+      this.cfMedia.upload(compressed, 'event-gallery').subscribe({
+        next: (asset) => {
+          this.images.at(index).get('imageUrl')!.setValue(asset.url);
+          this.uploadingIndex.set(null);
+          input.value = '';
+        },
+        error: () => {
+          this.uploadingIndex.set(null);
+          input.value = '';
+        },
+      });
+    });
+  }
+
+  private compressImage(file: File): Promise<File> {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith('image/')) {
+        resolve(file);
+        return;
+      }
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        canvas.getContext('2d')!.drawImage(img, 0, 0);
+        URL.revokeObjectURL(objectUrl);
+        canvas.toBlob(
+          (blob) => {
+            if (blob && blob.size < file.size) {
+              const name = file.name.replace(/\.[^.]+$/, '.webp');
+              resolve(new File([blob], name, { type: 'image/webp' }));
+            } else {
+              resolve(file);
+            }
+          },
+          'image/webp',
+          0.85,
+        );
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(file);
+      };
+      img.src = objectUrl;
     });
   }
 
@@ -91,11 +156,12 @@ export class EventGalleryFormComponent {
   }
 
   addImage(): void {
-    this.images.push(this.imageGroup({ displayOrder: this.images.length }));
+    this.images.push(this.imageGroup({ displayOrder: this.images.length + 1 }));
   }
 
   removeImage(index: number): void {
-    this.images.removeAt(index);
+    const url = this.images.at(index).get('imageUrl')!.value as string;
+    this.mediaDelete.confirmRemove(url, () => this.images.removeAt(index));
   }
 
   private loadGallery(id: string): void {
@@ -138,10 +204,10 @@ export class EventGalleryFormComponent {
       location: raw.location || undefined,
       eventDate: raw.eventDate || undefined,
       status: raw.status,
-      images: raw.images.map((img, index) => ({
+      images: raw.images.map((img) => ({
         imageUrl: img.imageUrl,
         caption: img.caption,
-        displayOrder: index,
+        displayOrder: img.displayOrder,
       })),
     };
     const req = this._id

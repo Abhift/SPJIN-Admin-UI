@@ -3,8 +3,6 @@ import { FormsModule } from '@angular/forms';
 import { DatePipe, TitleCasePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDialog } from '@angular/material/dialog';
@@ -29,8 +27,6 @@ import { confirm } from '../../shared/components/confirm-dialog/confirm-dialog.c
     FormsModule,
     MatButtonModule,
     MatIconModule,
-    MatSelectModule,
-    MatFormFieldModule,
     MatTooltipModule,
     MatProgressBarModule,
     PageHeaderComponent,
@@ -49,14 +45,25 @@ export class UploadMediaComponent {
   readonly assets = signal<CloudflareAsset[]>([]);
   readonly loading = signal(true);
   readonly uploading = signal(false);
+  readonly compressing = signal(false);
 
-  readonly selectedFilter = signal<string>('all');
-  uploadSectionType: CloudflareSectionType = 'general';
+  /** null = root folder view; a section type string = inside that folder */
+  readonly activeFolder = signal<CloudflareSectionType | null>(null);
 
-  readonly filtered = computed(() => {
-    const filter = this.selectedFilter();
-    const all = this.assets();
-    return filter === 'all' ? all : all.filter((a) => a.sectionType === filter);
+  readonly folderAssets = computed(() => {
+    const folder = this.activeFolder();
+    if (!folder) return [];
+    return this.assets().filter((a) => a.sectionType === folder);
+  });
+
+  readonly folderCounts = computed(() => {
+    const counts: Record<string, number> = Object.fromEntries(
+      this.sectionTypes.map((t) => [t, 0]),
+    );
+    for (const a of this.assets()) {
+      counts[a.sectionType] = (counts[a.sectionType] ?? 0) + 1;
+    }
+    return counts;
   });
 
   constructor() {
@@ -65,7 +72,7 @@ export class UploadMediaComponent {
 
   load(): void {
     this.loading.set(true);
-    this.cfMedia.list({ size: 200 }).subscribe({
+    this.cfMedia.list({ size: 500 }).subscribe({
       next: (page) => {
         this.assets.set(page.content);
         this.loading.set(false);
@@ -74,20 +81,28 @@ export class UploadMediaComponent {
     });
   }
 
-  readonly compressing = signal(false);
+  enterFolder(type: CloudflareSectionType): void {
+    this.activeFolder.set(type);
+  }
+
+  exitFolder(): void {
+    this.activeFolder.set(null);
+  }
 
   private compressImage(file: File): Promise<File> {
     return new Promise((resolve) => {
+      if (!file.type.startsWith('image/')) {
+        resolve(file);
+        return;
+      }
       const img = new Image();
       const objectUrl = URL.createObjectURL(file);
-
       img.onload = () => {
         const canvas = document.createElement('canvas');
         canvas.width = img.naturalWidth;
         canvas.height = img.naturalHeight;
         canvas.getContext('2d')!.drawImage(img, 0, 0);
         URL.revokeObjectURL(objectUrl);
-
         canvas.toBlob(
           (blob) => {
             if (blob && blob.size < file.size) {
@@ -101,12 +116,10 @@ export class UploadMediaComponent {
           0.85,
         );
       };
-
       img.onerror = () => {
         URL.revokeObjectURL(objectUrl);
         resolve(file);
       };
-
       img.src = objectUrl;
     });
   }
@@ -122,9 +135,9 @@ export class UploadMediaComponent {
   onFile(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    if (!file) {
-      return;
-    }
+    if (!file) return;
+
+    const folder = this.activeFolder()!;
 
     if (file.type.startsWith('image/')) {
       this.compressing.set(true);
@@ -136,7 +149,7 @@ export class UploadMediaComponent {
             `Image compressed: ${this.formatSize(file.size)} → ${this.formatSize(compressed.size)}`,
           );
         }
-        this.uploadFile(compressed, input);
+        this.uploadFile(compressed, folder, input);
       });
     } else {
       const error = this.validateNonImage(file);
@@ -145,17 +158,17 @@ export class UploadMediaComponent {
         input.value = '';
         return;
       }
-      this.uploadFile(file, input);
+      this.uploadFile(file, folder, input);
     }
   }
 
-  private uploadFile(file: File, input: HTMLInputElement): void {
+  private uploadFile(file: File, sectionType: string, input: HTMLInputElement): void {
     this.uploading.set(true);
-    this.cfMedia.upload(file, this.uploadSectionType).subscribe({
+    this.cfMedia.upload(file, sectionType).subscribe({
       next: (asset) => {
         this.assets.update((list) => [asset, ...list]);
         this.uploading.set(false);
-        this.notify.success('Uploaded to Cloudflare');
+        this.notify.success('Uploaded successfully');
         input.value = '';
       },
       error: () => this.uploading.set(false),
@@ -197,8 +210,24 @@ export class UploadMediaComponent {
     return 'insert_drive_file';
   }
 
-  countByType(type: string): number {
-    return this.assets().filter((a) => a.sectionType === type).length;
+  folderIcon(type: string): string {
+    const icons: Record<string, string> = {
+      'hero': 'wallpaper',
+      'articles': 'article',
+      'books': 'menu_book',
+      'videos': 'smart_display',
+      'activities': 'event',
+      'albums': 'photo_library',
+      'event-gallery': 'collections',
+      'pages': 'web',
+      'quotes': 'format_quote',
+      'testimonials': 'reviews',
+      'branches': 'location_on',
+      'menus': 'list',
+      'achievements': 'emoji_events',
+      'general': 'folder',
+    };
+    return icons[type] ?? 'folder';
   }
 
   formatSize(bytes: number): string {

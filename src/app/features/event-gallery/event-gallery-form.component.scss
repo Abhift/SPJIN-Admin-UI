@@ -13,10 +13,10 @@
 
 .image-row {
   display: grid;
-  grid-template-columns: 28px 1fr 1fr auto;
+  grid-template-columns: 140px 1fr auto;
   align-items: start;
   gap: 12px;
-  padding: 12px 0;
+  padding: 16px 0;
   border-top: 1px solid rgba(0, 0, 0, 0.08);
 
   &:first-of-type {
@@ -24,36 +24,114 @@
   }
 }
 
-.image-index {
+/* Left cell: thumbnail + upload button + order */
+.image-upload-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 140px;
+}
+
+.image-thumb {
+  width: 140px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  display: block;
+
+  &--empty {
+    background: rgba(0, 0, 0, 0.04);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: rgba(0, 0, 0, 0.3);
+    }
+  }
+}
+
+.upload-btn {
+  width: 100%;
+  font-size: 0.78rem;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+  }
+}
+
+.upload-bar {
+  border-radius: 4px;
+}
+
+.order-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin-top: 12px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.06);
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: rgba(0, 0, 0, 0.54);
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.order-label {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.55);
+  white-space: nowrap;
   flex-shrink: 0;
 }
 
-.image-url-field,
+.order-input {
+  width: 56px;
+  padding: 3px 6px;
+  font-size: 0.85rem;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  text-align: center;
+  outline: none;
+  background: #fff;
+
+  &:focus {
+    border-color: #1565c0;
+  }
+
+  /* hide browser spin arrows */
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    opacity: 0;
+  }
+}
+
+.field-error {
+  font-size: 0.75rem;
+  color: var(--mat-form-field-error-text-color, #f44336);
+}
+
+/* Right cell: caption */
 .caption-field {
   width: 100%;
+  min-width: 0;
 }
 
 .actions {
   margin-top: 8px;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 600px) {
   .image-row {
-    grid-template-columns: 28px 1fr auto;
+    grid-template-columns: 140px 1fr;
+
+    button[mat-icon-button] {
+      grid-column: 2;
+      justify-self: end;
+    }
 
     .caption-field {
-      grid-column: 2 / 3;
+      grid-column: 1 / 3;
     }
   }
 }

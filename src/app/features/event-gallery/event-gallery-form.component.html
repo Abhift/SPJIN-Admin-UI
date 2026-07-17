@@ -69,21 +69,64 @@
       </div>
 
       @if (images.length === 0) {
-        <p class="muted">No images added yet. Click "Add image" to add image URLs.</p>
+        <p class="muted">No images added yet. Click "Add image" to upload.</p>
       }
 
       <div formArrayName="images">
         @for (row of images.controls; track $index) {
           <div class="image-row" [formGroupName]="$index">
-            <span class="image-index">{{ $index + 1 }}</span>
 
-            <mat-form-field class="image-url-field" appearance="outline">
-              <mat-label>Image URL</mat-label>
-              <input matInput formControlName="imageUrl" placeholder="https://cdn.example.com/photo.jpg" type="url" />
-              @if (row.get('imageUrl')?.hasError('required')) {
-                <mat-error>Image URL is required</mat-error>
+            <div class="image-upload-cell">
+              @if (row.get('imageUrl')?.value) {
+                <img
+                  class="image-thumb"
+                  [src]="row.get('imageUrl')?.value"
+                  alt="Preview"
+                  loading="lazy"
+                />
+              } @else {
+                <div class="image-thumb image-thumb--empty">
+                  <mat-icon>image</mat-icon>
+                </div>
               }
-            </mat-form-field>
+
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                #fileInput
+                (change)="onImageFile($index, $event)"
+              />
+
+              @if (uploadingIndex() === $index) {
+                <mat-progress-bar mode="indeterminate" class="upload-bar"></mat-progress-bar>
+              } @else {
+                <button
+                  mat-stroked-button
+                  type="button"
+                  class="upload-btn"
+                  [matTooltip]="row.get('imageUrl')?.value ? 'Replace image' : 'Upload image'"
+                  (click)="fileInput.click()"
+                >
+                  <mat-icon>cloud_upload</mat-icon>
+                  {{ row.get('imageUrl')?.value ? 'Replace' : 'Upload' }}
+                </button>
+              }
+
+              @if (row.get('imageUrl')?.hasError('required') && row.get('imageUrl')?.touched) {
+                <span class="field-error">Image is required</span>
+              }
+
+              <div class="order-row">
+                <label class="order-label">Order</label>
+                <input
+                  type="number"
+                  class="order-input"
+                  formControlName="displayOrder"
+                  min="0"
+                />
+              </div>
+            </div>
 
             <app-localized-input
               class="caption-field"
