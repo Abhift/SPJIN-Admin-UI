@@ -11,7 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ContentApi } from '../../core/services/content-api.service';
-import { CloudflareMediaService } from '../../core/services/cloudflare-media.service';
+import { MediaService } from '../../core/services/media.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Activity, ActivityRequest } from '../../core/models/content.models';
 import { CONTENT_STATUSES, emptyLocalizedText } from '../../core/models/api.models';
@@ -127,7 +127,7 @@ import { slugValidator, slugify } from '../../shared/validators/slug.validator';
 export class ActivityFormDialog {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(ContentApi);
-  private readonly cfMedia = inject(CloudflareMediaService);
+  private readonly media = inject(MediaService);
   private readonly notify = inject(NotificationService);
   readonly data = inject<Activity | null>(MAT_DIALOG_DATA);
   private readonly ref = inject<MatDialogRef<ActivityFormDialog, boolean>>(MatDialogRef);
@@ -167,7 +167,7 @@ export class ActivityFormDialog {
     const ext = file.name.includes('.') ? file.name.slice(file.name.lastIndexOf('.')) : '';
     const renamed = new File([file], `${this.baseName()}-cover${ext}`, { type: file.type });
     this.uploadingCover.set(true);
-    this.cfMedia.upload(renamed, 'activities').subscribe({
+    this.media.upload(renamed, 'activities').subscribe({
       next: (asset) => {
         this.form.controls.coverImageUrl.setValue(asset.url);
         this.form.controls.coverImageUrl.markAsDirty();

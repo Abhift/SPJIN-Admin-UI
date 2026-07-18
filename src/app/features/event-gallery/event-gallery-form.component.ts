@@ -11,7 +11,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MediaDeleteService } from '../../shared/services/media-delete.service';
 import { ContentApi } from '../../core/services/content-api.service';
-import { CloudflareMediaService } from '../../core/services/cloudflare-media.service';
+import { MediaService } from '../../core/services/media.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { EventGallery, EventGalleryImage, EventGalleryRequest } from '../../core/models/content.models';
 import { CONTENT_STATUSES, ContentStatus, emptyLocalizedText } from '../../core/models/api.models';
@@ -51,7 +51,7 @@ import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 export class EventGalleryFormComponent {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(ContentApi);
-  private readonly cfMedia = inject(CloudflareMediaService);
+  private readonly media = inject(MediaService);
   private readonly notify = inject(NotificationService);
   private readonly router = inject(Router);
   private readonly mediaDelete = inject(MediaDeleteService);
@@ -102,7 +102,7 @@ export class EventGalleryFormComponent {
 
     this.uploadingIndex.set(index);
     this.compressImage(file).then((compressed) => {
-      this.cfMedia.upload(compressed, 'event-gallery').subscribe({
+      this.media.upload(compressed, 'event-gallery').subscribe({
         next: (asset) => {
           this.images.at(index).get('imageUrl')!.setValue(asset.url);
           this.uploadingIndex.set(null);

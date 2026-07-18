@@ -21,7 +21,7 @@ function parseAction(method: string, url: string, params: string): string {
     return params.includes('publish=true') ? 'PUBLISH' : 'UNPUBLISH';
   }
   if (method === 'POST' && url.includes('/rollback')) return 'ROLLBACK';
-  if (method === 'POST' && url.includes('/cloudflare-media')) return 'UPLOAD';
+  if (method === 'POST' && url.includes('/admin/media')) return 'UPLOAD';
   if (method === 'POST') return 'CREATE';
   if (method === 'PUT') return 'UPDATE';
   if (method === 'DELETE') return 'DELETE';

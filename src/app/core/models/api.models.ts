@@ -28,6 +28,7 @@ export const PAGE_SECTION_TYPES = [
   'achievements',
   'event-gallery',
   'print-media',
+  'donation',
 ] as const;
 
 export type PageSectionType = (typeof PAGE_SECTION_TYPES)[number];

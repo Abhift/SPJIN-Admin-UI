@@ -54,5 +54,4 @@ export const AUDIT_RESOURCE_TYPES = [
   'menus',
   'settings',
   'media',
-  'cloudflare-media',
 ] as const;

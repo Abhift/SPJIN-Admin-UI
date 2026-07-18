@@ -11,7 +11,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ContentApi } from '../../core/services/content-api.service';
-import { CloudflareMediaService } from '../../core/services/cloudflare-media.service';
+import { MediaService } from '../../core/services/media.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { MediaDeleteService } from '../../shared/services/media-delete.service';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
@@ -53,7 +53,7 @@ import { slugValidator, slugify } from '../../shared/validators/slug.validator';
 export class ArticleFormComponent {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(ContentApi);
-  private readonly cfMedia = inject(CloudflareMediaService);
+  private readonly media = inject(MediaService);
   private readonly notify = inject(NotificationService);
   private readonly mediaDelete = inject(MediaDeleteService);
   private readonly router = inject(Router);
@@ -106,7 +106,7 @@ export class ArticleFormComponent {
     if (!file) return;
     this.uploadingFeatured.set(true);
     this.compressImage(file).then((compressed) => {
-      this.cfMedia.upload(compressed, 'articles').subscribe({
+      this.media.upload(compressed, 'articles').subscribe({
         next: (asset) => {
           this.form.controls.featuredImageUrl.setValue(asset.url);
           this.uploadingFeatured.set(false);

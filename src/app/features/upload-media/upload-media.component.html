@@ -40,25 +40,27 @@
         </span>
       </div>
 
-      <div class="upload-controls">
-        <button
-          mat-flat-button
-          color="primary"
-          type="button"
-          (click)="fileInput.click()"
-          [disabled]="uploading() || compressing()"
-        >
-          <mat-icon>cloud_upload</mat-icon>
-          {{ compressing() ? 'Compressing…' : uploading() ? 'Uploading…' : 'Upload to ' + (folder | titlecase) }}
-        </button>
-        <input
-          #fileInput
-          type="file"
-          accept="image/*,.pdf,.doc,.docx"
-          hidden
-          (change)="onFile($event)"
-        />
-      </div>
+      @if (folder !== 'donation') {
+        <div class="upload-controls">
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            (click)="fileInput.click()"
+            [disabled]="uploading() || compressing()"
+          >
+            <mat-icon>cloud_upload</mat-icon>
+            {{ compressing() ? 'Compressing…' : uploading() ? 'Uploading…' : 'Upload to ' + (folder | titlecase) }}
+          </button>
+          <input
+            #fileInput
+            type="file"
+            accept="image/*,.pdf,.doc,.docx"
+            hidden
+            (change)="onFile($event)"
+          />
+        </div>
+      }
     </div>
 
     @if (compressing() || uploading()) {
@@ -67,7 +69,54 @@
 
     <!-- Files in folder -->
     @if (!loading()) {
-      @if (folderAssets().length === 0) {
+      @if (folder === 'donation') {
+        <!-- Donation: fixed-name image slots -->
+        <div class="donation-grid">
+          @for (slot of DONATION_SLOTS; track slot.name) {
+            <div class="donation-slot">
+              <div class="slot-header">
+                <mat-icon>{{ slot.icon }}</mat-icon>
+                <span class="slot-label">{{ slot.label }}</span>
+              </div>
+              <div class="slot-preview">
+                @if (donationSlotAsset(slot.name); as asset) {
+                  <img [src]="asset.url | mediaUrl" [alt]="slot.label" loading="lazy" class="slot-img" />
+                  <div class="slot-meta">
+                    <span>{{ formatSize(asset.fileSize) }} · {{ asset.uploadedAt | date: 'dd MMM yyyy' }}</span>
+                    <button mat-stroked-button class="copy-btn" type="button" (click)="copyUrl(asset.url)" matTooltip="Copy URL">
+                      <mat-icon>content_copy</mat-icon> Copy URL
+                    </button>
+                  </div>
+                } @else {
+                  <div class="slot-empty">
+                    <mat-icon>image_not_supported</mat-icon>
+                    <span>No image yet</span>
+                  </div>
+                }
+              </div>
+              <div class="slot-actions">
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  #slotInput
+                  (change)="onDonationFile($event, slot.name, slotInput)"
+                />
+                <button
+                  mat-flat-button
+                  color="primary"
+                  type="button"
+                  (click)="slotInput.click()"
+                  [disabled]="uploadingSlot() === slot.name || compressing()"
+                >
+                  <mat-icon>cloud_upload</mat-icon>
+                  {{ uploadingSlot() === slot.name ? 'Uploading…' : compressing() ? 'Compressing…' : (donationSlotAsset(slot.name) ? 'Replace' : 'Upload') }}
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      } @else if (folderAssets().length === 0) {
         <app-empty-state
           icon="{{ folderIcon(folder) }}"
           message="No files in {{ folder | titlecase }} yet. Upload one above."

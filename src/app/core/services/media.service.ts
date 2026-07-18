@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Page, PageQuery, PAGE_SECTION_TYPES, PageSectionType } from '../models/api.models';
 
-export interface CloudflareAsset {
+export interface MediaAsset {
   id: string;
   fileName: string;
   sectionType: string;
@@ -14,29 +14,30 @@ export interface CloudflareAsset {
   uploadedAt: string;
 }
 
-export const CLOUDFLARE_SECTION_TYPES = PAGE_SECTION_TYPES;
-export type CloudflareSectionType = PageSectionType;
+export const SECTION_TYPES = PAGE_SECTION_TYPES;
+export type SectionType = PageSectionType;
 
 @Injectable({ providedIn: 'root' })
-export class CloudflareMediaService {
+export class MediaService {
   private readonly http = inject(HttpClient);
-  private readonly base = `${environment.apiBase}/admin/cloudflare-media`;
+  private readonly base = `${environment.apiBase}/admin/media`;
 
-  list(query: PageQuery & { sectionType?: string } = {}): Observable<Page<CloudflareAsset>> {
+  list(query: PageQuery & { sectionType?: string } = {}): Observable<Page<MediaAsset>> {
     let params = new HttpParams()
       .set('page', String(query.page ?? 0))
       .set('size', String(query.size ?? 100));
     if (query.sectionType) {
       params = params.set('sectionType', query.sectionType);
     }
-    return this.http.get<Page<CloudflareAsset>>(this.base, { params });
+    return this.http.get<Page<MediaAsset>>(this.base, { params });
   }
 
-  upload(file: File, sectionType: string): Observable<CloudflareAsset> {
+  upload(file: File, sectionType: string, name?: string): Observable<MediaAsset> {
     const form = new FormData();
     form.append('file', file);
     form.append('sectionType', sectionType);
-    return this.http.post<CloudflareAsset>(this.base, form);
+    if (name) form.append('name', name);
+    return this.http.post<MediaAsset>(this.base, form);
   }
 
   remove(id: string): Observable<void> {

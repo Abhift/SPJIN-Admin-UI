@@ -8,11 +8,11 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { Clipboard } from '@angular/cdk/clipboard';
 import {
-  CloudflareAsset,
-  CloudflareMediaService,
-  CLOUDFLARE_SECTION_TYPES,
-  CloudflareSectionType,
-} from '../../core/services/cloudflare-media.service';
+  MediaAsset,
+  MediaService,
+  SECTION_TYPES,
+  SectionType,
+} from '../../core/services/media.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
@@ -38,19 +38,26 @@ import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
   styleUrl: './upload-media.component.scss',
 })
 export class UploadMediaComponent {
-  private readonly cfMedia = inject(CloudflareMediaService);
+  private readonly media = inject(MediaService);
   private readonly notify = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
   private readonly clipboard = inject(Clipboard);
 
-  readonly sectionTypes = CLOUDFLARE_SECTION_TYPES;
-  readonly assets = signal<CloudflareAsset[]>([]);
+  readonly sectionTypes = SECTION_TYPES;
+  readonly assets = signal<MediaAsset[]>([]);
   readonly loading = signal(true);
   readonly uploading = signal(false);
   readonly compressing = signal(false);
 
   /** null = root folder view; a section type string = inside that folder */
-  readonly activeFolder = signal<CloudflareSectionType | null>(null);
+  readonly activeFolder = signal<SectionType | null>(null);
+
+  readonly DONATION_SLOTS = [
+    { name: 'home-hero', label: 'Home Hero Image', icon: 'home' },
+    { name: 'UpiQrCode', label: 'UPI QR Code', icon: 'qr_code_2' },
+  ] as const;
+
+  readonly uploadingSlot = signal<string | null>(null);
 
   readonly folderAssets = computed(() => {
     const folder = this.activeFolder();
@@ -74,7 +81,7 @@ export class UploadMediaComponent {
 
   load(): void {
     this.loading.set(true);
-    this.cfMedia.list({ size: 500 }).subscribe({
+    this.media.list({ size: 500 }).subscribe({
       next: (page) => {
         this.assets.set(page.content);
         this.loading.set(false);
@@ -83,7 +90,7 @@ export class UploadMediaComponent {
     });
   }
 
-  enterFolder(type: CloudflareSectionType): void {
+  enterFolder(type: SectionType): void {
     this.activeFolder.set(type);
   }
 
@@ -166,7 +173,7 @@ export class UploadMediaComponent {
 
   private uploadFile(file: File, sectionType: string, input: HTMLInputElement): void {
     this.uploading.set(true);
-    this.cfMedia.upload(file, sectionType).subscribe({
+    this.media.upload(file, sectionType).subscribe({
       next: (asset) => {
         this.assets.update((list) => [asset, ...list]);
         this.uploading.set(false);
@@ -182,17 +189,17 @@ export class UploadMediaComponent {
     this.notify.success('URL copied to clipboard');
   }
 
-  remove(asset: CloudflareAsset): void {
+  remove(asset: MediaAsset): void {
     const type = asset.contentType.startsWith('image/') ? 'image' : 'file';
     confirm(this.dialog, {
       title: `Delete ${type}`,
-      message: `Are you sure you want to delete "${asset.fileName}"? This will permanently remove it from Cloudflare and cannot be undone.`,
+      message: `Are you sure you want to delete "${asset.fileName}"? This action cannot be undone.`,
       confirmText: 'Yes, delete',
       cancelText: 'Cancel',
       destructive: true,
     }).subscribe((ok) => {
       if (ok) {
-        this.cfMedia.remove(asset.id).subscribe(() => {
+        this.media.remove(asset.id).subscribe(() => {
           this.assets.update((list) => list.filter((a) => a.id !== asset.id));
           this.notify.success(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`);
         });
@@ -200,16 +207,51 @@ export class UploadMediaComponent {
     });
   }
 
-  isImage(asset: CloudflareAsset): boolean {
+  isImage(asset: MediaAsset): boolean {
     return asset.contentType.startsWith('image/');
   }
 
-  fileIcon(asset: CloudflareAsset): string {
+  fileIcon(asset: MediaAsset): string {
     if (asset.contentType.startsWith('image/')) return 'image';
     if (asset.contentType === 'application/pdf') return 'picture_as_pdf';
     if (asset.contentType.includes('word') || asset.contentType.includes('document'))
       return 'article';
     return 'insert_drive_file';
+  }
+
+  donationSlotAsset(slotName: string): MediaAsset | undefined {
+    return this.folderAssets().find((a) => {
+      const filename = a.url.split('/').pop() ?? '';
+      const base = filename.replace(/\.[^.]+$/, '');
+      return base === slotName;
+    });
+  }
+
+  onDonationFile(event: Event, slotName: string, input: HTMLInputElement): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.uploadingSlot.set(slotName);
+    this.compressImage(file).then((compressed) => {
+      this.media.upload(compressed, 'donation', slotName).subscribe({
+        next: (asset) => {
+          this.assets.update((list) => {
+            const rest = list.filter((a) => {
+              const filename = a.url.split('/').pop() ?? '';
+              const base = filename.replace(/\.[^.]+$/, '');
+              return !(a.sectionType === 'donation' && base === slotName);
+            });
+            return [asset, ...rest];
+          });
+          this.uploadingSlot.set(null);
+          this.notify.success(`${slotName} updated`);
+          input.value = '';
+        },
+        error: () => {
+          this.uploadingSlot.set(null);
+          input.value = '';
+        },
+      });
+    });
   }
 
   folderIcon(type: string): string {
@@ -228,6 +270,7 @@ export class UploadMediaComponent {
       'menus': 'list',
       'achievements': 'emoji_events',
       'general': 'folder',
+      'donation': 'volunteer_activism',
     };
     return icons[type] ?? 'folder';
   }

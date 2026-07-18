@@ -10,7 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ContentApi } from '../../core/services/content-api.service';
-import { CloudflareMediaService } from '../../core/services/cloudflare-media.service';
+import { MediaService } from '../../core/services/media.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { MediaDeleteService } from '../../shared/services/media-delete.service';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
@@ -170,7 +170,7 @@ import { slugValidator } from '../../shared/validators/slug.validator';
 export class BookFormDialog {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(ContentApi);
-  private readonly cfMedia = inject(CloudflareMediaService);
+  private readonly media = inject(MediaService);
   private readonly notify = inject(NotificationService);
   private readonly mediaDelete = inject(MediaDeleteService);
   readonly data = inject<Book | null>(MAT_DIALOG_DATA);
@@ -206,7 +206,7 @@ export class BookFormDialog {
     const oldUrl = this.form.controls.coverImageUrl.value;
     this.uploadingCover.set(true);
     this.compressImage(file).then((compressed) => {
-      this.cfMedia.upload(compressed, 'books').subscribe({
+      this.media.upload(compressed, 'books').subscribe({
         next: (asset) => {
           this.form.controls.coverImageUrl.setValue(asset.url);
           this.uploadingCover.set(false);
@@ -235,7 +235,7 @@ export class BookFormDialog {
     const file = input.files?.[0];
     if (!file) return;
     this.uploadingFile.set(true);
-    this.cfMedia.upload(file, 'books').subscribe({
+    this.media.upload(file, 'books').subscribe({
       next: (asset) => {
         this.form.controls.fileUrl.setValue(asset.url);
         this.form.controls.fileUrl.markAsDirty();
