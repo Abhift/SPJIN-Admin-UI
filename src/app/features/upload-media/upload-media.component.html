@@ -78,7 +78,7 @@
             <div class="asset-card">
               <div class="asset-preview">
                 @if (isImage(asset)) {
-                  <img [src]="asset.url" [alt]="asset.fileName" loading="lazy" />
+                  <img [src]="asset.url | mediaUrl" [alt]="asset.fileName" loading="lazy" />
                 } @else {
                   <mat-icon class="doc-icon">{{ fileIcon(asset) }}</mat-icon>
                 }

@@ -17,6 +17,7 @@ import { NotificationService } from '../../core/services/notification.service';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { confirm } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 
 @Component({
   selector: 'app-upload-media',
@@ -31,6 +32,7 @@ import { confirm } from '../../shared/components/confirm-dialog/confirm-dialog.c
     MatProgressBarModule,
     PageHeaderComponent,
     EmptyStateComponent,
+    MediaUrlPipe,
   ],
   templateUrl: './upload-media.component.html',
   styleUrl: './upload-media.component.scss',
