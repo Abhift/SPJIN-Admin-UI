@@ -27,6 +27,7 @@ export const PAGE_SECTION_TYPES = [
   'menus',
   'achievements',
   'event-gallery',
+  'print-media',
 ] as const;
 
 export type PageSectionType = (typeof PAGE_SECTION_TYPES)[number];
