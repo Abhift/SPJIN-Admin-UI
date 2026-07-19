@@ -22,9 +22,8 @@ export class CrudClient<TEntity, TRequest> {
     let params = new HttpParams()
       .set('page', String(query.page ?? 0))
       .set('size', String(query.size ?? 20));
-    if (query.sort) {
-      params = params.set('sort', query.sort);
-    }
+    if (query.sort) params = params.set('sort', query.sort);
+    if (query.lang) params = params.set('lang', query.lang);
     return this.http.get<Page<TEntity>>(this.base, { params });
   }
 

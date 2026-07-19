@@ -6,6 +6,14 @@
         New video
       </button>
     }
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width:155px;">
+      <mat-icon matPrefix style="font-size:18px;width:18px;height:18px;margin-right:6px;opacity:.6;">translate</mat-icon>
+      <mat-select [value]="selectedLang()" (selectionChange)="selectedLang.set($event.value)">
+        @for (opt of langOptions; track opt.value) {
+          <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
   </app-page-header>
 
   @if (!loading() && rows().length === 0) {

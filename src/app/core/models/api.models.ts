@@ -56,6 +56,7 @@ export interface PageQuery {
   page?: number;
   size?: number;
   sort?: string;
+  lang?: string;
 }
 
 /** Field-level validation error returned by the backend's GlobalExceptionHandler. */

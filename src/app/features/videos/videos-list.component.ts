@@ -1,7 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDialog } from '@angular/material/dialog';
 import { ContentApi } from '../../core/services/content-api.service';
 import { NotificationService } from '../../core/services/notification.service';
@@ -25,6 +27,8 @@ import { VideoFormDialog } from './video-form.dialog';
     MatButtonModule,
     MatIconModule,
     MatPaginatorModule,
+    MatSelectModule,
+    MatFormFieldModule,
     PageHeaderComponent,
     EmptyStateComponent,
     DataTableComponent,
@@ -42,14 +46,31 @@ export class VideosListComponent {
   readonly pageIndex = signal(0);
   readonly pageSize = signal(20);
   readonly loading = signal(true);
+  readonly selectedLang = signal<'all' | 'hi' | 'en' | 'gu' | 'ne'>('all');
+
+  readonly langOptions: { value: 'all' | 'hi' | 'en' | 'gu' | 'ne'; label: string }[] = [
+    { value: 'all', label: 'All Languages' },
+    { value: 'hi', label: 'हिन्दी' },
+    { value: 'en', label: 'English' },
+    { value: 'gu', label: 'ગુજરાતી' },
+    { value: 'ne', label: 'नेपाली' },
+  ];
+
+  private readonly langLabels: Record<string, string> = {
+    hi: 'हिन्दी',
+    en: 'English',
+    gu: 'ગુજરાતી',
+    ne: 'नेपाली',
+  };
 
   readonly canWrite = this.auth.hasPermission('content:write');
   readonly canDelete = this.auth.hasPermission('content:delete');
   readonly canPublish = this.auth.hasPermission('content:publish');
 
   readonly columns: TableColumn<Video>[] = [
-    { key: 'title', header: 'Title', value: (r) => r.title.en },
+    { key: 'title', header: 'Title', value: (r) => r.title },
     { key: 'youtubeVideoId', header: 'Video / Playlist ID', value: (r) => r.youtubeVideoId ?? r.playlistId ?? '' },
+    { key: 'language', header: 'Language', value: (r) => (r.language ? (this.langLabels[r.language] ?? r.language) : '') },
     { key: 'displayOrder', header: 'Order', value: (r) => String(r.displayOrder) },
     { key: 'status', header: 'Status', type: 'status', value: (r) => r.status },
   ];
@@ -78,12 +99,17 @@ export class VideosListComponent {
   ];
 
   constructor() {
-    this.load();
+    effect(() => {
+      const lang = this.selectedLang();
+      this.pageIndex.set(0);
+      this.load(lang);
+    }, { allowSignalWrites: true });
   }
 
-  load(): void {
+  load(lang = this.selectedLang()): void {
     this.loading.set(true);
-    this.api.videos.list({ page: this.pageIndex(), size: this.pageSize(), sort: 'displayOrder,asc' }).subscribe({
+    const langParam = lang !== 'all' ? lang : undefined;
+    this.api.videos.list({ page: this.pageIndex(), size: this.pageSize(), sort: 'displayOrder,asc', lang: langParam }).subscribe({
       next: (page) => {
         this.rows.set(page.content);
         this.total.set(page.totalElements);
@@ -96,7 +122,7 @@ export class VideosListComponent {
   onPage(event: PageEvent): void {
     this.pageIndex.set(event.pageIndex);
     this.pageSize.set(event.pageSize);
-    this.load();
+    this.load(this.selectedLang());
   }
 
   create(): void {
@@ -141,7 +167,7 @@ export class VideosListComponent {
   private remove(item: Video): void {
     confirm(this.dialog, {
       title: 'Delete video',
-      message: `Delete "${item.title.en}"?`,
+      message: `Delete "${item.title}"?`,
       confirmText: 'Delete',
       destructive: true,
     }).subscribe((ok) => {

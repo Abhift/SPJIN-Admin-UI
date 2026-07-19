@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { LogEntry } from '../../core/models/audit.models';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -10,10 +10,8 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { ContentApi } from '../../core/services/content-api.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Video, VideoRequest } from '../../core/models/content.models';
-import { CONTENT_STATUSES, emptyLocalizedText } from '../../core/models/api.models';
-import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
+import { CONTENT_STATUSES } from '../../core/models/api.models';
 import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
-import { localizedTextValidator } from '../../shared/validators/localized-text.validator';
 
 const URL_PATTERN = /^https?:\/\/.+/;
 
@@ -28,7 +26,6 @@ const URL_PATTERN = /^https?:\/\/.+/;
     MatSelectModule,
     MatButtonModule,
     MatButtonToggleModule,
-    LocalizedInputComponent,
     SectionLogsComponent,
   ],
   styles: [`
@@ -42,11 +39,13 @@ const URL_PATTERN = /^https?:\/\/.+/;
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content>
 
-        <app-localized-input
-          label="Title"
-          formControlName="title"
-          [required]="true"
-        ></app-localized-input>
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Title</mat-label>
+          <input matInput formControlName="title" placeholder="Enter video title" />
+          @if (form.controls.title.hasError('required')) {
+            <mat-error>Title is required</mat-error>
+          }
+        </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Status</mat-label>
@@ -54,6 +53,17 @@ const URL_PATTERN = /^https?:\/\/.+/;
             @for (s of statuses; track s) {
               <mat-option [value]="s">{{ s }}</mat-option>
             }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Language</mat-label>
+          <mat-select formControlName="language">
+            <mat-option value="">— None —</mat-option>
+            <mat-option value="hi">हिन्दी</mat-option>
+            <mat-option value="en">English</mat-option>
+            <mat-option value="gu">ગુજરાતી</mat-option>
+            <mat-option value="ne">नेपाली</mat-option>
           </mat-select>
         </mat-form-field>
 
@@ -102,11 +112,10 @@ const URL_PATTERN = /^https?:\/\/.+/;
           </mat-form-field>
         }
 
-        <app-localized-input
-          label="Description"
-          formControlName="description"
-          [multiline]="true"
-        ></app-localized-input>
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Description</mat-label>
+          <textarea matInput formControlName="description" rows="3" placeholder="Enter description (optional)"></textarea>
+        </mat-form-field>
 
         @if (data) {
           <app-section-logs [logs]="logs()"></app-section-logs>
@@ -133,14 +142,15 @@ export class VideoFormDialog {
   readonly isVideo = signal(!this.data?.playlistId);
 
   readonly form = this.fb.nonNullable.group({
-    title: [this.data?.title ?? emptyLocalizedText(), localizedTextValidator(true)],
+    title: [this.data?.title ?? '', Validators.required],
     status: [this.data?.status ?? 'DRAFT'],
+    language: [this.data?.language ?? ''],
     displayOrder: [this.data?.displayOrder ?? 0, [Validators.required, Validators.min(0)]],
     videoType: [this.data?.playlistId ? 'playlist' : 'video'],
     youtubeVideoId: [this.data?.youtubeVideoId ?? ''],
     playlistId: [this.data?.playlistId ?? ''],
     thumbnailUrl: [this.data?.thumbnailUrl ?? ''],
-    description: [this.data?.description ?? emptyLocalizedText()],
+    description: [this.data?.description ?? ''],
   });
 
   constructor() {
@@ -181,10 +191,11 @@ export class VideoFormDialog {
     this.saving.set(true);
     const raw = this.form.getRawValue();
     const body: VideoRequest = {
-      title: raw.title,
+      title: raw.title.trim(),
       status: raw.status,
+      language: raw.language || undefined,
       displayOrder: raw.displayOrder,
-      description: raw.description,
+      description: raw.description || undefined,
       ...(this.isVideo()
         ? { youtubeVideoId: raw.youtubeVideoId, thumbnailUrl: raw.thumbnailUrl }
         : { playlistId: raw.playlistId }),

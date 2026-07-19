@@ -107,11 +107,12 @@ export interface BookRequest {
 
 export interface Video {
   id: string;
-  title: LocalizedText;
-  description?: LocalizedText;
+  title: string;
+  description?: string;
   youtubeVideoId?: string;
   playlistId?: string;
   thumbnailUrl?: string;
+  language?: string;
   displayOrder: number;
   status: ContentStatus;
   createdAt?: string;
@@ -120,11 +121,12 @@ export interface Video {
 }
 
 export interface VideoRequest {
-  title: LocalizedText;
-  description?: LocalizedText;
+  title: string;
+  description?: string;
   youtubeVideoId?: string;
   playlistId?: string;
   thumbnailUrl?: string;
+  language?: string;
   displayOrder: number;
   status: ContentStatus;
 }
