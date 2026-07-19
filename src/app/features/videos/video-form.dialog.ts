@@ -73,6 +73,9 @@ const URL_PATTERN = /^https?:\/\/.+/;
           @if (form.controls.displayOrder.hasError('min')) {
             <mat-error>Must be 0 or greater</mat-error>
           }
+          @if (form.controls.displayOrder.hasError('duplicate')) {
+            <mat-error>{{ form.controls.displayOrder.getError('duplicate') }}</mat-error>
+          }
         </mat-form-field>
 
         <div class="type-toggle">
@@ -208,7 +211,13 @@ export class VideoFormDialog {
         this.notify.success('Video saved');
         this.ref.close(true);
       },
-      error: () => this.saving.set(false),
+      error: (err) => {
+        this.saving.set(false);
+        const msg: string = err?.error?.message ?? '';
+        if (msg.toLowerCase().includes('display order')) {
+          this.form.controls.displayOrder.setErrors({ duplicate: msg });
+        }
+      },
     });
   }
 }
