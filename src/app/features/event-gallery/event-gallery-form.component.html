@@ -62,11 +62,43 @@
     <mat-card class="form-card">
       <div class="section-head">
         <h3>Images ({{ images.length }})</h3>
+
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          #multiInput
+          (change)="onMultipleFiles($event, multiInput)"
+        />
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          [disabled]="multiProgress() !== null"
+          (click)="multiInput.click()"
+        >
+          <mat-icon>photo_library</mat-icon>
+          @if (multiProgress(); as p) {
+            Uploading {{ p.done }}/{{ p.total }}…
+          } @else {
+            Upload multiple
+          }
+        </button>
+
         <button mat-stroked-button type="button" (click)="addImage()">
           <mat-icon>add_photo_alternate</mat-icon>
           Add image
         </button>
       </div>
+
+      @if (multiProgress(); as p) {
+        <mat-progress-bar
+          mode="determinate"
+          [value]="(p.done / p.total) * 100"
+          style="margin-bottom: 12px; border-radius: 4px;"
+        ></mat-progress-bar>
+      }
 
       @if (images.length === 0) {
         <p class="muted">No images added yet. Click "Add image" to upload.</p>

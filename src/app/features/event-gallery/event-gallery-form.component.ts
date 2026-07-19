@@ -69,6 +69,7 @@ export class EventGalleryFormComponent {
   readonly statuses = CONTENT_STATUSES;
   readonly logs = signal<LogEntry[]>([]);
   readonly uploadingIndex = signal<number | null>(null);
+  readonly multiProgress = signal<{ done: number; total: number } | null>(null);
 
   readonly form = this.fb.nonNullable.group({
     title: [emptyLocalizedText(), localizedTextValidator(true)],
@@ -116,6 +117,41 @@ export class EventGalleryFormComponent {
           this.uploadingIndex.set(null);
           input.value = '';
         },
+      });
+    });
+  }
+
+  onMultipleFiles(event: Event, input: HTMLInputElement): void {
+    const files = Array.from((event.target as HTMLInputElement).files ?? []);
+    if (!files.length) return;
+
+    const startIndex = this.images.length;
+    const startOrder = startIndex + 1;
+    const prog = { done: 0, total: files.length };
+    this.multiProgress.set({ ...prog });
+
+    // Add placeholder rows immediately so order numbers are visible right away
+    files.forEach((_, i) => {
+      this.images.push(this.imageGroup({ displayOrder: startOrder + i }));
+    });
+
+    // Upload all files in parallel; update each row as its upload completes
+    files.forEach((file, i) => {
+      const rowIndex = startIndex + i;
+      this.compressImage(file).then((compressed) => {
+        this.media.upload(compressed, 'event-gallery').subscribe({
+          next: (asset) => {
+            this.images.at(rowIndex).get('imageUrl')!.setValue(asset.url);
+            prog.done++;
+            if (prog.done === prog.total) { this.multiProgress.set(null); input.value = ''; }
+            else this.multiProgress.set({ ...prog });
+          },
+          error: () => {
+            prog.done++;
+            if (prog.done === prog.total) { this.multiProgress.set(null); input.value = ''; }
+            else this.multiProgress.set({ ...prog });
+          },
+        });
       });
     });
   }
