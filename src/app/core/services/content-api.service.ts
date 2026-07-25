@@ -1,30 +1,18 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import {
-  Activity,
-  ActivityRequest,
-  Album,
-  AlbumRequest,
   Article,
   ArticleRequest,
   Book,
   BookRequest,
-  Branch,
-  BranchRequest,
   Category,
   CategoryRequest,
   EventGallery,
   EventGalleryRequest,
-  Menu,
-  MenuRequest,
   PageEntity,
   PageRequest,
-  Quote,
-  QuoteRequest,
   Setting,
   SettingRequest,
-  Testimonial,
-  TestimonialRequest,
   Video,
   VideoRequest,
 } from '../models/content.models';
@@ -42,12 +30,6 @@ export class ContentApi {
   readonly articles = new CrudClient<Article, ArticleRequest>(this.http, 'articles');
   readonly books = new CrudClient<Book, BookRequest>(this.http, 'books');
   readonly videos = new CrudClient<Video, VideoRequest>(this.http, 'videos');
-  readonly quotes = new CrudClient<Quote, QuoteRequest>(this.http, 'quotes');
-  readonly testimonials = new CrudClient<Testimonial, TestimonialRequest>(this.http, 'testimonials');
-  readonly activities = new CrudClient<Activity, ActivityRequest>(this.http, 'activities');
-  readonly branches = new CrudClient<Branch, BranchRequest>(this.http, 'branches');
-  readonly albums = new CrudClient<Album, AlbumRequest>(this.http, 'albums');
-  readonly menus = new CrudClient<Menu, MenuRequest>(this.http, 'menus');
   readonly settings = new CrudClient<Setting, SettingRequest>(this.http, 'settings');
   readonly eventGalleries = new CrudClient<EventGallery, EventGalleryRequest>(this.http, 'event-galleries');
 

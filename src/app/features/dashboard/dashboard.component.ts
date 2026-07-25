@@ -32,8 +32,6 @@ export class DashboardComponent {
     { label: 'Articles', icon: 'article', route: '/articles', count: null },
     { label: 'Books', icon: 'menu_book', route: '/books', count: null },
     { label: 'Videos', icon: 'smart_display', route: '/videos', count: null },
-    { label: 'Activities', icon: 'event', route: '/activities', count: null },
-    { label: 'Albums', icon: 'photo_library', route: '/albums', count: null },
   ]);
 
   constructor() {
@@ -42,21 +40,12 @@ export class DashboardComponent {
       articles: this.api.articles.list({ size: 1 }),
       books: this.api.books.list({ size: 1 }),
       videos: this.api.videos.list({ size: 1 }),
-      activities: this.api.activities.list({ size: 1 }),
-      albums: this.api.albums.list({ size: 1 }),
     }).subscribe((res) => {
       this.stats.set([
         { label: 'Pages', icon: 'web', route: '/pages', count: res.pages.totalElements },
         { label: 'Articles', icon: 'article', route: '/articles', count: res.articles.totalElements },
         { label: 'Books', icon: 'menu_book', route: '/books', count: res.books.totalElements },
         { label: 'Videos', icon: 'smart_display', route: '/videos', count: res.videos.totalElements },
-        {
-          label: 'Activities',
-          icon: 'event',
-          route: '/activities',
-          count: res.activities.totalElements,
-        },
-        { label: 'Albums', icon: 'photo_library', route: '/albums', count: res.albums.totalElements },
       ]);
     });
   }

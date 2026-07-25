@@ -33,38 +33,6 @@ export const routes: Routes = [
           import('./features/books/books-list.component').then((m) => m.BooksListComponent),
       },
       {
-        path: 'activities',
-        canActivate: [permissionGuard],
-        data: { permissions: ['content:read'] },
-        loadComponent: () =>
-          import('./features/activities/activities-list.component').then(
-            (m) => m.ActivitiesListComponent,
-          ),
-      },
-      {
-        path: 'quotes',
-        canActivate: [permissionGuard],
-        data: { permissions: ['content:read'] },
-        loadComponent: () =>
-          import('./features/quotes/quotes-list.component').then((m) => m.QuotesListComponent),
-      },
-      {
-        path: 'testimonials',
-        canActivate: [permissionGuard],
-        data: { permissions: ['content:read'] },
-        loadComponent: () =>
-          import('./features/testimonials/testimonials-list.component').then(
-            (m) => m.TestimonialsListComponent,
-          ),
-      },
-      {
-        path: 'branches',
-        canActivate: [permissionGuard],
-        data: { permissions: ['content:read'] },
-        loadComponent: () =>
-          import('./features/branches/branches-list.component').then((m) => m.BranchesListComponent),
-      },
-      {
         path: 'articles',
         canActivate: [permissionGuard],
         data: { permissions: ['content:read'] },
@@ -105,48 +73,6 @@ export const routes: Routes = [
         data: { permissions: ['content:write'] },
         loadComponent: () =>
           import('./features/pages/page-form.component').then((m) => m.PageFormComponent),
-      },
-      {
-        path: 'albums',
-        canActivate: [permissionGuard],
-        data: { permissions: ['content:read'] },
-        loadComponent: () =>
-          import('./features/albums/albums-list.component').then((m) => m.AlbumsListComponent),
-      },
-      {
-        path: 'albums/new',
-        canActivate: [permissionGuard],
-        data: { permissions: ['content:write'] },
-        loadComponent: () =>
-          import('./features/albums/album-form.component').then((m) => m.AlbumFormComponent),
-      },
-      {
-        path: 'albums/:id/edit',
-        canActivate: [permissionGuard],
-        data: { permissions: ['content:write'] },
-        loadComponent: () =>
-          import('./features/albums/album-form.component').then((m) => m.AlbumFormComponent),
-      },
-      {
-        path: 'menus',
-        canActivate: [permissionGuard],
-        data: { permissions: ['content:read'] },
-        loadComponent: () =>
-          import('./features/menus/menus-list.component').then((m) => m.MenusListComponent),
-      },
-      {
-        path: 'menus/new',
-        canActivate: [permissionGuard],
-        data: { permissions: ['content:write'] },
-        loadComponent: () =>
-          import('./features/menus/menu-form.component').then((m) => m.MenuFormComponent),
-      },
-      {
-        path: 'menus/:id/edit',
-        canActivate: [permissionGuard],
-        data: { permissions: ['content:write'] },
-        loadComponent: () =>
-          import('./features/menus/menu-form.component').then((m) => m.MenuFormComponent),
       },
       {
         path: 'settings',
