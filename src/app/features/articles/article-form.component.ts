@@ -16,14 +16,10 @@ import { NotificationService } from '../../core/services/notification.service';
 import { MediaDeleteService } from '../../shared/services/media-delete.service';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { Article, ArticleRequest, Category } from '../../core/models/content.models';
-import { CONTENT_STATUSES, ContentStatus, SeoDto, emptyLocalizedText } from '../../core/models/api.models';
-import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
-import { LanguageSwitchComponent } from '../../shared/components/language-switch/language-switch.component';
-import { LocalizedLangService } from '../../shared/services/localized-lang.service';
+import { CONTENT_STATUSES, ContentStatus } from '../../core/models/api.models';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
 import { LogEntry } from '../../core/models/audit.models';
-import { localizedTextValidator } from '../../shared/validators/localized-text.validator';
 import { slugValidator, slugify } from '../../shared/validators/slug.validator';
 
 @Component({
@@ -40,13 +36,10 @@ import { slugValidator, slugify } from '../../shared/validators/slug.validator';
     MatExpansionModule,
     MatProgressBarModule,
     MatTooltipModule,
-    LocalizedInputComponent,
-    LanguageSwitchComponent,
     PageHeaderComponent,
     SectionLogsComponent,
     MediaUrlPipe,
   ],
-  providers: [LocalizedLangService],
   templateUrl: './article-form.component.html',
   styleUrl: './article-form.component.scss',
 })
@@ -66,6 +59,14 @@ export class ArticleFormComponent {
     }
   }
 
+  /** Pre-select language from the list page's language filter. */
+  @Input() set lang(value: string | undefined) {
+    const supported = ['en', 'hi', 'gu', 'ne'];
+    if (value && supported.includes(value)) {
+      this.form.controls.language.setValue(value);
+    }
+  }
+
   readonly editing = signal(false);
   readonly saving = signal(false);
   readonly uploadingFeatured = signal(false);
@@ -73,17 +74,25 @@ export class ArticleFormComponent {
   readonly logs = signal<LogEntry[]>([]);
   readonly statuses = CONTENT_STATUSES;
 
+  readonly langOptions = [
+    { value: 'hi', label: 'हिन्दी' },
+    { value: 'en', label: 'English' },
+    { value: 'gu', label: 'ગુજરાતી' },
+    { value: 'ne', label: 'नेपाली' },
+  ];
+
   readonly form = this.fb.nonNullable.group({
-    title: [emptyLocalizedText(), localizedTextValidator(true)],
+    language: ['hi', Validators.required],
+    title: ['', Validators.required],
     slug: ['', [Validators.required, slugValidator()]],
     status: ['DRAFT' as ContentStatus],
     categoryId: this.fb.control<string | null>(null),
     featuredImageUrl: [''],
-    summary: [emptyLocalizedText()],
-    content: [emptyLocalizedText(), localizedTextValidator(true)],
+    summary: [''],
+    content: ['', Validators.required],
     seo: this.fb.nonNullable.group({
-      metaTitle: [emptyLocalizedText()],
-      metaDescription: [emptyLocalizedText()],
+      metaTitle: [''],
+      metaDescription: [''],
       canonicalUrl: [''],
     }),
   });
@@ -94,9 +103,9 @@ export class ArticleFormComponent {
 
   autoSlug(): void {
     const slugCtrl = this.form.controls.slug;
-    const titleEn = this.form.controls.title.value.en;
-    if (!slugCtrl.dirty && titleEn) {
-      slugCtrl.setValue(slugify(titleEn));
+    const title = this.form.controls.title.value;
+    if (!slugCtrl.dirty && title) {
+      slugCtrl.setValue(slugify(title));
     }
   }
 
@@ -172,17 +181,18 @@ export class ArticleFormComponent {
 
   private patch(a: Article): void {
     this.form.patchValue({
+      language: a.language ?? 'hi',
       title: a.title,
       slug: a.slug,
       status: a.status,
       categoryId: a.categoryId ?? null,
       featuredImageUrl: a.featuredImageUrl ?? '',
-      summary: a.summary ?? emptyLocalizedText(),
-      content: a.content,
+      summary: a.summary ?? '',
+      content: a.content ?? '',
       seo: {
-        metaTitle: a.seo?.metaTitle ?? emptyLocalizedText(),
-        metaDescription: a.seo?.metaDescription ?? emptyLocalizedText(),
-        canonicalUrl: a.seo?.canonicalUrl ?? '',
+        metaTitle: a.metaTitle ?? '',
+        metaDescription: a.metaDescription ?? '',
+        canonicalUrl: a.canonicalUrl ?? '',
       },
     });
   }
@@ -195,20 +205,18 @@ export class ArticleFormComponent {
     }
     this.saving.set(true);
     const raw = this.form.getRawValue();
-    const seo: SeoDto = {
-      metaTitle: raw.seo.metaTitle,
-      metaDescription: raw.seo.metaDescription,
-      canonicalUrl: raw.seo.canonicalUrl || undefined,
-    };
     const body: ArticleRequest = {
+      language: raw.language,
       title: raw.title,
       slug: raw.slug,
       status: raw.status,
       categoryId: raw.categoryId ?? undefined,
       featuredImageUrl: raw.featuredImageUrl || undefined,
-      summary: raw.summary,
+      summary: raw.summary || undefined,
       content: raw.content,
-      seo,
+      metaTitle: raw.seo.metaTitle || undefined,
+      metaDescription: raw.seo.metaDescription || undefined,
+      canonicalUrl: raw.seo.canonicalUrl || undefined,
     };
     const req = this._id
       ? this.api.articles.update(this._id, body)

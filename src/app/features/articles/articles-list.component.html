@@ -4,6 +4,18 @@
       <mat-icon>category</mat-icon>
       Categories
     </button>
+
+    <button mat-stroked-button [matMenuTriggerFor]="langMenu">
+      <mat-icon>translate</mat-icon>
+      {{ currentLangLabel() }}
+      <mat-icon>arrow_drop_down</mat-icon>
+    </button>
+    <mat-menu #langMenu="matMenu">
+      @for (opt of langOptions; track opt.value) {
+        <button mat-menu-item (click)="onLangChange(opt.value)">{{ opt.label }}</button>
+      }
+    </mat-menu>
+
     @if (canWrite) {
       <button mat-flat-button color="primary" (click)="create()">
         <mat-icon>add</mat-icon>
@@ -29,5 +41,4 @@
       (page)="onPage($event)"
     ></mat-paginator>
   }
-
 </div>

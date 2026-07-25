@@ -51,13 +51,16 @@ export interface CategoryRequest {
 export interface Article {
   id: string;
   slug: string;
-  title: LocalizedText;
-  summary?: LocalizedText;
-  content: LocalizedText;
+  language: string;
+  title: string;
+  summary?: string;
+  content: string;
   categoryId?: string;
   featuredImageUrl?: string;
   status: ContentStatus;
-  seo?: SeoDto;
+  metaTitle?: string;
+  metaDescription?: string;
+  canonicalUrl?: string;
   version?: number;
   createdAt?: string;
   updatedAt?: string;
@@ -66,13 +69,16 @@ export interface Article {
 
 export interface ArticleRequest {
   slug: string;
-  title: LocalizedText;
-  summary?: LocalizedText;
-  content: LocalizedText;
+  language: string;
+  title: string;
+  summary?: string;
+  content: string;
   categoryId?: string;
   featuredImageUrl?: string;
   status: ContentStatus;
-  seo?: SeoDto;
+  metaTitle?: string;
+  metaDescription?: string;
+  canonicalUrl?: string;
 }
 
 /* ---------------------------------------------------------------- Books */

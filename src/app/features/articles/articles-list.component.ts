@@ -1,7 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { ContentApi } from '../../core/services/content-api.service';
@@ -25,6 +26,7 @@ import { CategoryManagerDialog } from './category-manager.dialog';
   imports: [
     MatButtonModule,
     MatIconModule,
+    MatMenuModule,
     MatPaginatorModule,
     PageHeaderComponent,
     EmptyStateComponent,
@@ -44,14 +46,35 @@ export class ArticlesListComponent {
   readonly pageIndex = signal(0);
   readonly pageSize = signal(20);
   readonly loading = signal(true);
+  readonly selectedLang = signal<'all' | 'en' | 'hi' | 'gu' | 'ne'>('all');
+
+  readonly langOptions: { value: 'all' | 'en' | 'hi' | 'gu' | 'ne'; label: string }[] = [
+    { value: 'all', label: 'All Languages' },
+    { value: 'hi', label: 'हिन्दी' },
+    { value: 'en', label: 'English' },
+    { value: 'gu', label: 'ગુજરાતી' },
+    { value: 'ne', label: 'नेपाली' },
+  ];
+
+  readonly currentLangLabel = computed(
+    () => this.langOptions.find((o) => o.value === this.selectedLang())?.label ?? 'All Languages',
+  );
 
   readonly canWrite = this.auth.hasPermission('content:write');
   readonly canDelete = this.auth.hasPermission('content:delete');
   readonly canPublish = this.auth.hasPermission('content:publish');
 
+  private readonly langLabels: Record<string, string> = {
+    hi: 'हिन्दी',
+    en: 'English',
+    gu: 'ગુજરાતી',
+    ne: 'नेपाली',
+  };
+
   readonly columns: TableColumn<Article>[] = [
-    { key: 'title', header: 'Title', value: (r) => r.title.en },
+    { key: 'title', header: 'Title', value: (r) => r.title },
     { key: 'slug', header: 'Slug', value: (r) => r.slug },
+    { key: 'language', header: 'Language', value: (r) => (r.language ? (this.langLabels[r.language] ?? r.language) : '') },
     { key: 'status', header: 'Status', type: 'status', value: (r) => r.status },
   ];
 
@@ -82,26 +105,39 @@ export class ArticlesListComponent {
     this.load();
   }
 
-  load(): void {
+  onLangChange(lang: 'all' | 'en' | 'hi' | 'gu' | 'ne'): void {
+    this.selectedLang.set(lang);
+    this.pageIndex.set(0);
+    this.load(lang);
+  }
+
+  load(lang = this.selectedLang()): void {
     this.loading.set(true);
-    this.api.articles.list({ page: this.pageIndex(), size: this.pageSize() }).subscribe({
-      next: (page) => {
-        this.rows.set(page.content);
-        this.total.set(page.totalElements);
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false),
-    });
+    const langParam = lang !== 'all' ? lang : undefined;
+    this.api.articles
+      .list({ page: this.pageIndex(), size: this.pageSize(), lang: langParam })
+      .subscribe({
+        next: (page) => {
+          this.rows.set(page.content);
+          this.total.set(page.totalElements);
+          this.loading.set(false);
+        },
+        error: () => this.loading.set(false),
+      });
   }
 
   onPage(event: PageEvent): void {
     this.pageIndex.set(event.pageIndex);
     this.pageSize.set(event.pageSize);
-    this.load();
+    this.load(this.selectedLang());
   }
 
   create(): void {
-    void this.router.navigate(['/articles/new']);
+    const lang = this.selectedLang();
+    void this.router.navigate(
+      ['/articles/new'],
+      lang !== 'all' ? { queryParams: { lang } } : undefined,
+    );
   }
 
   manageCategories(): void {
@@ -110,9 +146,14 @@ export class ArticlesListComponent {
 
   onAction(e: TableActionEvent<Article>): void {
     switch (e.event) {
-      case 'edit':
-        void this.router.navigate(['/articles', e.row.id, 'edit']);
+      case 'edit': {
+        const lang = this.selectedLang();
+        void this.router.navigate(
+          ['/articles', e.row.id, 'edit'],
+          lang !== 'all' ? { queryParams: { lang } } : undefined,
+        );
         break;
+      }
       case 'publish':
         this.setPublished(e.row, true);
         break;
@@ -135,7 +176,7 @@ export class ArticlesListComponent {
   private remove(item: Article): void {
     confirm(this.dialog, {
       title: 'Delete article',
-      message: `Delete "${item.title.en}"?`,
+      message: `Delete "${item.title}"?`,
       confirmText: 'Delete',
       destructive: true,
     }).subscribe((ok) => {
