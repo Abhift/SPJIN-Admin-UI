@@ -161,15 +161,16 @@ export interface EventGalleryImage {
   id?: string;
   imageUrl: string;
   displayOrder: number;
-  caption?: LocalizedText;
+  caption?: string;
 }
 
 export interface EventGallery {
   id: string;
   slug: string;
-  title: LocalizedText;
-  heading?: LocalizedText;
-  details?: LocalizedText;
+  language: string;
+  title: string;
+  heading?: string;
+  details?: string;
   location?: string;
   eventDate?: string;
   status: ContentStatus;
@@ -182,9 +183,10 @@ export interface EventGallery {
 
 export interface EventGalleryRequest {
   slug: string;
-  title: LocalizedText;
-  heading?: LocalizedText;
-  details?: LocalizedText;
+  language: string;
+  title: string;
+  heading?: string;
+  details?: string;
   location?: string;
   eventDate?: string;
   status: ContentStatus;

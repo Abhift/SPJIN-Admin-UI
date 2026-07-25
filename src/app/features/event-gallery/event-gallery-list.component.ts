@@ -1,7 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { ContentApi } from '../../core/services/content-api.service';
 import { NotificationService } from '../../core/services/notification.service';
@@ -25,6 +26,7 @@ import { MatDialog } from '@angular/material/dialog';
     RouterLink,
     MatButtonModule,
     MatIconModule,
+    MatMenuModule,
     MatPaginatorModule,
     PageHeaderComponent,
     EmptyStateComponent,
@@ -44,13 +46,34 @@ export class EventGalleryListComponent {
   readonly pageIndex = signal(0);
   readonly pageSize = signal(20);
   readonly loading = signal(true);
+  readonly selectedLang = signal('all');
+
+  readonly langOptions = [
+    { value: 'all', label: 'All Languages' },
+    { value: 'hi', label: 'हिन्दी' },
+    { value: 'en', label: 'English' },
+    { value: 'gu', label: 'ગુજરાતી' },
+    { value: 'ne', label: 'नेपाली' },
+  ];
+
+  readonly langLabels: Record<string, string> = {
+    hi: 'हिन्दी',
+    en: 'English',
+    gu: 'ગુજરાતી',
+    ne: 'नेपाली',
+  };
+
+  readonly currentLangLabel = computed(
+    () => this.langOptions.find((o) => o.value === this.selectedLang())?.label ?? 'All Languages',
+  );
 
   readonly canWrite = this.auth.hasPermission('content:write');
   readonly canDelete = this.auth.hasPermission('content:delete');
   readonly canPublish = this.auth.hasPermission('content:publish');
 
   readonly columns: TableColumn<EventGallery>[] = [
-    { key: 'title', header: 'Title', value: (r) => r.title.en },
+    { key: 'title', header: 'Title', value: (r) => r.title },
+    { key: 'language', header: 'Language', value: (r) => (r.language ? (this.langLabels[r.language] ?? r.language) : '') },
     { key: 'location', header: 'Location', value: (r) => r.location ?? '—' },
     { key: 'eventDate', header: 'Date', value: (r) => r.eventDate ?? '—' },
     { key: 'imageCount', header: 'Images', value: (r) => String(r.imageCount ?? r.images?.length ?? 0) },
@@ -78,10 +101,17 @@ export class EventGalleryListComponent {
     this.load();
   }
 
+  onLangChange(lang: string): void {
+    this.selectedLang.set(lang);
+    this.pageIndex.set(0);
+    this.load();
+  }
+
   load(): void {
     this.loading.set(true);
+    const langParam = this.selectedLang() === 'all' ? undefined : this.selectedLang();
     this.api.eventGalleries
-      .list({ page: this.pageIndex(), size: this.pageSize(), sort: 'eventDate,desc' })
+      .list({ page: this.pageIndex(), size: this.pageSize(), sort: 'eventDate,desc', lang: langParam })
       .subscribe({
         next: (page) => {
           this.rows.set(page.content);
@@ -125,7 +155,7 @@ export class EventGalleryListComponent {
   private remove(item: EventGallery): void {
     confirm(this.dialog, {
       title: 'Delete event gallery',
-      message: `Delete "${item.title.en}"?`,
+      message: `Delete "${item.title}"?`,
       confirmText: 'Delete',
       destructive: true,
     }).subscribe((ok) => {

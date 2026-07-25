@@ -14,14 +14,10 @@ import { ContentApi } from '../../core/services/content-api.service';
 import { MediaService } from '../../core/services/media.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { EventGallery, EventGalleryImage, EventGalleryRequest } from '../../core/models/content.models';
-import { CONTENT_STATUSES, ContentStatus, emptyLocalizedText } from '../../core/models/api.models';
-import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
-import { LanguageSwitchComponent } from '../../shared/components/language-switch/language-switch.component';
-import { LocalizedLangService } from '../../shared/services/localized-lang.service';
+import { CONTENT_STATUSES, ContentStatus } from '../../core/models/api.models';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
 import { LogEntry } from '../../core/models/audit.models';
-import { localizedTextValidator } from '../../shared/validators/localized-text.validator';
 import { slugValidator, slugify } from '../../shared/validators/slug.validator';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 
@@ -38,13 +34,10 @@ import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
     MatIconModule,
     MatProgressBarModule,
     MatTooltipModule,
-    LocalizedInputComponent,
-    LanguageSwitchComponent,
     PageHeaderComponent,
     SectionLogsComponent,
     MediaUrlPipe,
   ],
-  providers: [LocalizedLangService],
   templateUrl: './event-gallery-form.component.html',
   styleUrl: './event-gallery-form.component.scss',
 })
@@ -57,10 +50,17 @@ export class EventGalleryFormComponent {
   private readonly mediaDelete = inject(MediaDeleteService);
 
   private _id: string | null = null;
+
   @Input() set id(value: string | undefined) {
     this._id = value ?? null;
     if (value) {
       this.loadGallery(value);
+    }
+  }
+
+  @Input() set lang(value: string | undefined) {
+    if (value) {
+      this.form.controls.language.setValue(value);
     }
   }
 
@@ -71,11 +71,19 @@ export class EventGalleryFormComponent {
   readonly uploadingIndex = signal<number | null>(null);
   readonly multiProgress = signal<{ done: number; total: number } | null>(null);
 
+  readonly langOptions = [
+    { value: 'hi', label: 'हिन्दी' },
+    { value: 'en', label: 'English' },
+    { value: 'gu', label: 'ગુજરાતી' },
+    { value: 'ne', label: 'नेपाली' },
+  ];
+
   readonly form = this.fb.nonNullable.group({
-    title: [emptyLocalizedText(), localizedTextValidator(true)],
+    language: ['hi', Validators.required],
+    title: ['', Validators.required],
     slug: ['', [Validators.required, slugValidator()]],
-    heading: [emptyLocalizedText()],
-    details: [emptyLocalizedText()],
+    heading: [''],
+    details: [''],
     location: [''],
     eventDate: [''],
     status: ['DRAFT' as ContentStatus],
@@ -89,7 +97,7 @@ export class EventGalleryFormComponent {
   private imageGroup(img: Partial<EventGalleryImage> = {}) {
     return this.fb.nonNullable.group({
       imageUrl: [img.imageUrl ?? '', Validators.required],
-      caption: [img.caption ?? emptyLocalizedText()],
+      caption: [img.caption ?? ''],
       displayOrder: [img.displayOrder ?? this.images.length + 1],
     });
   }
@@ -108,7 +116,6 @@ export class EventGalleryFormComponent {
           this.images.at(index).get('imageUrl')!.setValue(asset.url);
           this.uploadingIndex.set(null);
           input.value = '';
-          // Trash the previous image immediately after the new one is uploaded
           if (oldUrl && oldUrl.startsWith('/uploads/')) {
             this.api.trashFile(oldUrl).subscribe();
           }
@@ -130,12 +137,10 @@ export class EventGalleryFormComponent {
     const prog = { done: 0, total: files.length };
     this.multiProgress.set({ ...prog });
 
-    // Add placeholder rows immediately so order numbers are visible right away
     files.forEach((_, i) => {
       this.images.push(this.imageGroup({ displayOrder: startOrder + i }));
     });
 
-    // Upload all files in parallel; update each row as its upload completes
     files.forEach((file, i) => {
       const rowIndex = startIndex + i;
       this.compressImage(file).then((compressed) => {
@@ -193,9 +198,9 @@ export class EventGalleryFormComponent {
 
   autoSlug(): void {
     const slugCtrl = this.form.controls.slug;
-    const titleEn = this.form.controls.title.value.en;
-    if (!slugCtrl.dirty && titleEn) {
-      slugCtrl.setValue(slugify(titleEn));
+    const title = this.form.controls.title.value;
+    if (!slugCtrl.dirty && title) {
+      slugCtrl.setValue(slugify(title));
     }
   }
 
@@ -218,10 +223,11 @@ export class EventGalleryFormComponent {
 
   private patch(g: EventGallery): void {
     this.form.patchValue({
+      language: g.language ?? 'hi',
       title: g.title,
       slug: g.slug,
-      heading: g.heading ?? emptyLocalizedText(),
-      details: g.details ?? emptyLocalizedText(),
+      heading: g.heading ?? '',
+      details: g.details ?? '',
       location: g.location ?? '',
       eventDate: g.eventDate ?? '',
       status: g.status,
@@ -242,15 +248,16 @@ export class EventGalleryFormComponent {
     const raw = this.form.getRawValue();
     const body: EventGalleryRequest = {
       slug: raw.slug,
+      language: raw.language,
       title: raw.title,
-      heading: raw.heading,
-      details: raw.details,
+      heading: raw.heading || undefined,
+      details: raw.details || undefined,
       location: raw.location || undefined,
       eventDate: raw.eventDate || undefined,
       status: raw.status,
       images: raw.images.map((img) => ({
         imageUrl: img.imageUrl,
-        caption: img.caption,
+        caption: img.caption || undefined,
         displayOrder: img.displayOrder,
       })),
     };
