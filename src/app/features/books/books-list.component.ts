@@ -1,6 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { ContentApi } from '../../core/services/content-api.service';
@@ -24,6 +25,7 @@ import { BookFormDialog } from './book-form.dialog';
   imports: [
     MatButtonModule,
     MatIconModule,
+    MatMenuModule,
     MatPaginatorModule,
     PageHeaderComponent,
     EmptyStateComponent,
@@ -42,14 +44,35 @@ export class BooksListComponent {
   readonly pageIndex = signal(0);
   readonly pageSize = signal(20);
   readonly loading = signal(true);
+  readonly selectedLang = signal<'all' | 'en' | 'hi' | 'gu' | 'ne'>('all');
+
+  readonly langOptions: { value: 'all' | 'en' | 'hi' | 'gu' | 'ne'; label: string }[] = [
+    { value: 'all', label: 'All Languages' },
+    { value: 'hi', label: 'हिन्दी' },
+    { value: 'en', label: 'English' },
+    { value: 'gu', label: 'ગુજરાતી' },
+    { value: 'ne', label: 'नेपाली' },
+  ];
+
+  readonly currentLangLabel = computed(
+    () => this.langOptions.find((o) => o.value === this.selectedLang())?.label ?? 'All Languages',
+  );
+
+  private readonly langLabels: Record<string, string> = {
+    hi: 'हिन्दी',
+    en: 'English',
+    gu: 'ગુજરાતી',
+    ne: 'नेपाली',
+  };
 
   readonly canWrite = this.auth.hasPermission('content:write');
   readonly canDelete = this.auth.hasPermission('content:delete');
   readonly canPublish = this.auth.hasPermission('content:publish');
 
   readonly columns: TableColumn<Book>[] = [
-    { key: 'title', header: 'Title', value: (r) => r.title.en },
-    { key: 'author', header: 'Author', value: (r) => r.author?.en ?? '' },
+    { key: 'title', header: 'Title', value: (r) => r.title },
+    { key: 'author', header: 'Author', value: (r) => r.author ?? '' },
+    { key: 'language', header: 'Language', value: (r) => (r.language ? (this.langLabels[r.language] ?? r.language) : '') },
     { key: 'category', header: 'Category', value: (r) => r.category ?? '' },
     { key: 'slug', header: 'Slug', value: (r) => r.slug },
     { key: 'status', header: 'Status', type: 'status', value: (r) => r.status },
@@ -82,9 +105,16 @@ export class BooksListComponent {
     this.load();
   }
 
-  load(): void {
+  onLangChange(lang: 'all' | 'en' | 'hi' | 'gu' | 'ne'): void {
+    this.selectedLang.set(lang);
+    this.pageIndex.set(0);
+    this.load(lang);
+  }
+
+  load(lang = this.selectedLang()): void {
     this.loading.set(true);
-    this.api.books.list({ page: this.pageIndex(), size: this.pageSize() }).subscribe({
+    const langParam = lang !== 'all' ? lang : undefined;
+    this.api.books.list({ page: this.pageIndex(), size: this.pageSize(), lang: langParam }).subscribe({
       next: (page) => {
         this.rows.set(page.content);
         this.total.set(page.totalElements);
@@ -97,7 +127,7 @@ export class BooksListComponent {
   onPage(event: PageEvent): void {
     this.pageIndex.set(event.pageIndex);
     this.pageSize.set(event.pageSize);
-    this.load();
+    this.load(this.selectedLang());
   }
 
   create(): void {
@@ -142,7 +172,7 @@ export class BooksListComponent {
   private remove(item: Book): void {
     confirm(this.dialog, {
       title: 'Delete book',
-      message: `Delete "${item.title.en}"?`,
+      message: `Delete "${item.title}"?`,
       confirmText: 'Delete',
       destructive: true,
     }).subscribe((ok) => {

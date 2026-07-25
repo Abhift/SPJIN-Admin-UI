@@ -15,12 +15,8 @@ import { NotificationService } from '../../core/services/notification.service';
 import { MediaDeleteService } from '../../shared/services/media-delete.service';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { Book, BookRequest } from '../../core/models/content.models';
-import { CONTENT_STATUSES, emptyLocalizedText } from '../../core/models/api.models';
-import { LocalizedInputComponent } from '../../shared/components/localized-input/localized-input.component';
-import { LanguageSwitchComponent } from '../../shared/components/language-switch/language-switch.component';
-import { LocalizedLangService } from '../../shared/services/localized-lang.service';
+import { CONTENT_STATUSES } from '../../core/models/api.models';
 import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
-import { localizedTextValidator } from '../../shared/validators/localized-text.validator';
 import { slugValidator } from '../../shared/validators/slug.validator';
 
 @Component({
@@ -36,22 +32,41 @@ import { slugValidator } from '../../shared/validators/slug.validator';
     MatIconModule,
     MatTooltipModule,
     MatProgressBarModule,
-    LocalizedInputComponent,
-    LanguageSwitchComponent,
     SectionLogsComponent,
     MediaUrlPipe,
   ],
-  providers: [LocalizedLangService],
   template: `
     <h2 mat-dialog-title>{{ data ? 'Edit book' : 'New book' }}</h2>
     <form [formGroup]="form" (ngSubmit)="save()">
       <mat-dialog-content>
-        <app-language-switch></app-language-switch>
-        <app-localized-input
-          label="Title"
-          formControlName="title"
-          [required]="true"
-        ></app-localized-input>
+
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Language</mat-label>
+            <mat-select formControlName="language">
+              @for (opt of langOptions; track opt.value) {
+                <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="status">
+              @for (s of statuses; track s) {
+                <mat-option [value]="s">{{ s }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Title</mat-label>
+          <input matInput formControlName="title" />
+          @if (form.controls.title.hasError('required')) {
+            <mat-error>Title is required</mat-error>
+          }
+        </mat-form-field>
+
         <div class="form-grid">
           <mat-form-field appearance="outline">
             <mat-label>Slug</mat-label>
@@ -63,24 +78,20 @@ import { slugValidator } from '../../shared/validators/slug.validator';
             }
           </mat-form-field>
           <mat-form-field appearance="outline">
-            <mat-label>Status</mat-label>
-            <mat-select formControlName="status">
-              @for (s of statuses; track s) {
-                <mat-option [value]="s">{{ s }}</mat-option>
-              }
-            </mat-select>
+            <mat-label>Author</mat-label>
+            <input matInput formControlName="author" />
           </mat-form-field>
         </div>
-        <app-localized-input label="Author" formControlName="author"></app-localized-input>
+
         <mat-form-field class="full-width" appearance="outline">
           <mat-label>Category</mat-label>
           <input matInput formControlName="category" placeholder="e.g. Spirituality" />
         </mat-form-field>
-        <app-localized-input
-          label="Description"
-          formControlName="description"
-          [multiline]="true"
-        ></app-localized-input>
+
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Description</mat-label>
+          <textarea matInput formControlName="description" rows="3"></textarea>
+        </mat-form-field>
 
         <!-- Cover image upload -->
         <div class="cover-section">
@@ -182,22 +193,30 @@ export class BookFormDialog {
   readonly uploadingFile = signal(false);
   readonly logs = signal<LogEntry[]>([]);
 
+  readonly langOptions = [
+    { value: 'hi', label: 'हिन्दी' },
+    { value: 'en', label: 'English' },
+    { value: 'gu', label: 'ગુજરાતી' },
+    { value: 'ne', label: 'नेपाली' },
+  ];
+
+  readonly form = this.fb.nonNullable.group({
+    language: [this.data?.language ?? 'hi', Validators.required],
+    title: [this.data?.title ?? '', Validators.required],
+    slug: [this.data?.slug ?? '', [Validators.required, slugValidator()]],
+    status: [this.data?.status ?? 'DRAFT'],
+    author: [this.data?.author ?? ''],
+    category: [this.data?.category ?? ''],
+    description: [this.data?.description ?? ''],
+    coverImageUrl: [this.data?.coverImageUrl ?? ''],
+    fileUrl: [this.data?.fileUrl ?? ''],
+  });
+
   constructor() {
     if (this.data?.id) {
       this.api.books.get(this.data.id).subscribe((b) => this.logs.set(b.logs ?? []));
     }
   }
-
-  readonly form = this.fb.nonNullable.group({
-    title: [this.data?.title ?? emptyLocalizedText(), localizedTextValidator(true)],
-    slug: [this.data?.slug ?? '', [Validators.required, slugValidator()]],
-    status: [this.data?.status ?? 'DRAFT'],
-    author: [this.data?.author ?? emptyLocalizedText()],
-    category: [this.data?.category ?? ''],
-    description: [this.data?.description ?? emptyLocalizedText()],
-    coverImageUrl: [this.data?.coverImageUrl ?? ''],
-    fileUrl: [this.data?.fileUrl ?? ''],
-  });
 
   onCoverFile(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -293,7 +312,13 @@ export class BookFormDialog {
     this.saving.set(true);
     const raw = this.form.getRawValue();
     const body: BookRequest = {
-      ...raw,
+      language: raw.language,
+      title: raw.title,
+      slug: raw.slug,
+      status: raw.status as BookRequest['status'],
+      author: raw.author || undefined,
+      category: raw.category || undefined,
+      description: raw.description || undefined,
       coverImageUrl: raw.coverImageUrl.trim() || undefined,
       fileUrl: raw.fileUrl.trim() || undefined,
     };

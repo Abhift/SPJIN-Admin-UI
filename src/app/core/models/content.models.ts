@@ -86,10 +86,11 @@ export interface ArticleRequest {
 export interface Book {
   id: string;
   slug: string;
-  title: LocalizedText;
-  author?: LocalizedText;
+  language: string;
+  title: string;
+  author?: string;
   category?: string;
-  description?: LocalizedText;
+  description?: string;
   coverImageUrl?: string;
   fileUrl?: string;
   status: ContentStatus;
@@ -100,10 +101,11 @@ export interface Book {
 
 export interface BookRequest {
   slug: string;
-  title: LocalizedText;
-  author?: LocalizedText;
+  language: string;
+  title: string;
+  author?: string;
   category?: string;
-  description?: LocalizedText;
+  description?: string;
   coverImageUrl?: string;
   fileUrl?: string;
   status: ContentStatus;
