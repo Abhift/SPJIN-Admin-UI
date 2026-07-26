@@ -6,8 +6,23 @@
 
   <form [formGroup]="form" (ngSubmit)="save()">
     <mat-card class="form-card">
-      <app-language-switch></app-language-switch>
       <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Language</mat-label>
+          <mat-select formControlName="language">
+            @for (opt of langOptions; track opt.value) {
+              <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            @for (s of statuses; track s) {
+              <mat-option [value]="s">{{ s }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Name</mat-label>
           <input matInput formControlName="name" (focusout)="autoSlug()" />
@@ -23,14 +38,6 @@
           } @else if (form.controls.slug.hasError('slug')) {
             <mat-error>Invalid slug</mat-error>
           }
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Status</mat-label>
-          <mat-select formControlName="status">
-            @for (s of statuses; track s) {
-              <mat-option [value]="s">{{ s }}</mat-option>
-            }
-          </mat-select>
         </mat-form-field>
       </div>
     </mat-card>

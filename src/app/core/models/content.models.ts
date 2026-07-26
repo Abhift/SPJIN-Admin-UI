@@ -15,6 +15,7 @@ export interface Section {
 export interface PageEntity {
   id: string;
   slug: string;
+  language: string;
   name: string;
   status: ContentStatus;
   seo?: SeoDto;
@@ -27,6 +28,7 @@ export interface PageEntity {
 
 export interface PageRequest {
   slug: string;
+  language: string;
   name: string;
   status: ContentStatus;
   seo?: SeoDto;

@@ -1,7 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { ContentApi } from '../../core/services/content-api.service';
@@ -24,6 +25,7 @@ import { confirm } from '../../shared/components/confirm-dialog/confirm-dialog.c
   imports: [
     MatButtonModule,
     MatIconModule,
+    MatMenuModule,
     MatPaginatorModule,
     PageHeaderComponent,
     EmptyStateComponent,
@@ -43,6 +45,26 @@ export class PagesListComponent {
   readonly pageIndex = signal(0);
   readonly pageSize = signal(20);
   readonly loading = signal(true);
+  readonly selectedLang = signal('all');
+
+  readonly langOptions = [
+    { value: 'all', label: 'All Languages' },
+    { value: 'hi', label: 'हिन्दी' },
+    { value: 'en', label: 'English' },
+    { value: 'gu', label: 'ગુજરાતી' },
+    { value: 'ne', label: 'नेपाली' },
+  ];
+
+  readonly langLabels: Record<string, string> = {
+    hi: 'हिन्दी',
+    en: 'English',
+    gu: 'ગુજરાતી',
+    ne: 'नेपाली',
+  };
+
+  readonly currentLangLabel = computed(
+    () => this.langOptions.find((o) => o.value === this.selectedLang())?.label ?? 'All Languages',
+  );
 
   readonly canWrite = this.auth.hasPermission('content:write');
   readonly canDelete = this.auth.hasPermission('content:delete');
@@ -50,6 +72,7 @@ export class PagesListComponent {
 
   readonly columns: TableColumn<PageEntity>[] = [
     { key: 'name', header: 'Name', value: (r) => r.name },
+    { key: 'language', header: 'Language', value: (r) => (r.language ? (this.langLabels[r.language] ?? r.language) : '') },
     { key: 'slug', header: 'Slug', value: (r) => r.slug },
     { key: 'sections', header: 'Sections', value: (r) => String(r.sections?.length ?? 0) },
     { key: 'status', header: 'Status', type: 'status', value: (r) => r.status },
@@ -82,9 +105,16 @@ export class PagesListComponent {
     this.load();
   }
 
+  onLangChange(lang: string): void {
+    this.selectedLang.set(lang);
+    this.pageIndex.set(0);
+    this.load();
+  }
+
   load(): void {
     this.loading.set(true);
-    this.api.pages.list({ page: this.pageIndex(), size: this.pageSize() }).subscribe({
+    const langParam = this.selectedLang() === 'all' ? undefined : this.selectedLang();
+    this.api.pages.list({ page: this.pageIndex(), size: this.pageSize(), lang: langParam }).subscribe({
       next: (page) => {
         this.rows.set(page.content);
         this.total.set(page.totalElements);

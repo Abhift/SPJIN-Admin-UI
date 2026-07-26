@@ -82,7 +82,15 @@ export class PageFormComponent {
   readonly statuses = CONTENT_STATUSES;
   readonly sectionTypes = PAGE_SECTION_TYPES;
 
+  readonly langOptions = [
+    { value: 'hi', label: 'हिन्दी' },
+    { value: 'en', label: 'English' },
+    { value: 'gu', label: 'ગુજરાતી' },
+    { value: 'ne', label: 'नेपाली' },
+  ];
+
   readonly form = this.fb.nonNullable.group({
+    language: ['en', Validators.required],
     name: ['', Validators.required],
     slug: ['', [Validators.required, slugValidator()]],
     status: ['DRAFT' as ContentStatus],
@@ -147,6 +155,7 @@ export class PageFormComponent {
 
   private patch(p: PageEntity): void {
     this.form.patchValue({
+      language: p.language ?? 'en',
       name: p.name,
       slug: p.slug,
       status: p.status,
@@ -176,6 +185,7 @@ export class PageFormComponent {
       canonicalUrl: raw.seo.canonicalUrl || undefined,
     };
     const body: PageRequest = {
+      language: raw.language,
       name: raw.name,
       slug: raw.slug,
       status: raw.status,
