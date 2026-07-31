@@ -17,7 +17,6 @@ import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { Book, BookRequest } from '../../core/models/content.models';
 import { CONTENT_STATUSES } from '../../core/models/api.models';
 import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
-import { slugValidator } from '../../shared/validators/slug.validator';
 
 @Component({
   selector: 'app-book-form-dialog',
@@ -67,21 +66,10 @@ import { slugValidator } from '../../shared/validators/slug.validator';
           }
         </mat-form-field>
 
-        <div class="form-grid">
-          <mat-form-field appearance="outline">
-            <mat-label>Slug</mat-label>
-            <input matInput formControlName="slug" />
-            @if (form.controls.slug.hasError('required')) {
-              <mat-error>Slug is required</mat-error>
-            } @else if (form.controls.slug.hasError('slug')) {
-              <mat-error>Lowercase letters, numbers and hyphens only</mat-error>
-            }
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Author</mat-label>
-            <input matInput formControlName="author" />
-          </mat-form-field>
-        </div>
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Author</mat-label>
+          <input matInput formControlName="author" />
+        </mat-form-field>
 
         <mat-form-field class="full-width" appearance="outline">
           <mat-label>Category</mat-label>
@@ -203,7 +191,6 @@ export class BookFormDialog {
   readonly form = this.fb.nonNullable.group({
     language: [this.data?.language ?? 'hi', Validators.required],
     title: [this.data?.title ?? '', Validators.required],
-    slug: [this.data?.slug ?? '', [Validators.required, slugValidator()]],
     status: [this.data?.status ?? 'DRAFT'],
     author: [this.data?.author ?? ''],
     category: [this.data?.category ?? ''],
@@ -314,7 +301,6 @@ export class BookFormDialog {
     const body: BookRequest = {
       language: raw.language,
       title: raw.title,
-      slug: raw.slug,
       status: raw.status as BookRequest['status'],
       author: raw.author || undefined,
       category: raw.category || undefined,

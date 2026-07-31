@@ -87,7 +87,6 @@ export interface ArticleRequest {
 
 export interface Book {
   id: string;
-  slug: string;
   language: string;
   title: string;
   author?: string;
@@ -102,7 +101,6 @@ export interface Book {
 }
 
 export interface BookRequest {
-  slug: string;
   language: string;
   title: string;
   author?: string;

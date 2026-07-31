@@ -12,12 +12,23 @@
     </mat-menu>
 
     @if (canWrite) {
+      <button mat-stroked-button (click)="showImport.set(!showImport())">
+        <mat-icon>upload_file</mat-icon>
+        Import Excel
+      </button>
       <button mat-flat-button color="primary" (click)="create()">
         <mat-icon>add</mat-icon>
         New book
       </button>
     }
   </app-page-header>
+
+  @if (showImport()) {
+    <app-book-excel-import
+      (close)="showImport.set(false)"
+      (imported)="load()">
+    </app-book-excel-import>
+  }
 
   @if (!loading() && rows().length === 0) {
     <app-empty-state icon="menu_book" message="No books yet" hint="Add your first book." />
@@ -35,5 +46,14 @@
       [pageSizeOptions]="[10, 20, 50]"
       (page)="onPage($event)"
     ></mat-paginator>
+  }
+
+  @if (!loading() && rows().length > 0) {
+    <div class="d-flex justify-content-end mt-3">
+      <button mat-stroked-button (click)="exportExcel()" [disabled]="exporting()">
+        <mat-icon>download</mat-icon>
+        {{ exporting() ? 'Exporting…' : 'Export Excel' }}
+      </button>
+    </div>
   }
 </div>

@@ -18,6 +18,8 @@ import {
 } from '../../shared/components/data-table/data-table.component';
 import { confirm } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { BookFormDialog } from './book-form.dialog';
+import { BookExcelImportComponent } from './book-excel-import.component';
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-books-list',
@@ -30,6 +32,7 @@ import { BookFormDialog } from './book-form.dialog';
     PageHeaderComponent,
     EmptyStateComponent,
     DataTableComponent,
+    BookExcelImportComponent,
   ],
   templateUrl: './books-list.component.html',
 })
@@ -44,6 +47,8 @@ export class BooksListComponent {
   readonly pageIndex = signal(0);
   readonly pageSize = signal(20);
   readonly loading = signal(true);
+  readonly showImport = signal(false);
+  readonly exporting = signal(false);
   readonly selectedLang = signal<'all' | 'en' | 'hi' | 'gu' | 'ne'>('all');
 
   readonly langOptions: { value: 'all' | 'en' | 'hi' | 'gu' | 'ne'; label: string }[] = [
@@ -74,7 +79,6 @@ export class BooksListComponent {
     { key: 'author', header: 'Author', value: (r) => r.author ?? '' },
     { key: 'language', header: 'Language', value: (r) => (r.language ? (this.langLabels[r.language] ?? r.language) : '') },
     { key: 'category', header: 'Category', value: (r) => r.category ?? '' },
-    { key: 'slug', header: 'Slug', value: (r) => r.slug },
     { key: 'status', header: 'Status', type: 'status', value: (r) => r.status },
   ];
 
@@ -132,6 +136,36 @@ export class BooksListComponent {
 
   create(): void {
     this.openForm(null);
+  }
+
+  exportExcel(): void {
+    this.exporting.set(true);
+    const lang = this.selectedLang() !== 'all' ? this.selectedLang() : undefined;
+    this.api.books.list({ size: 1000, lang }).subscribe({
+      next: page => {
+        const rows = page.content.map(b => ({
+          title:         b.title ?? '',
+          language:      b.language ?? '',
+          author:        b.author ?? '',
+          category:      b.category ?? '',
+          fileUrl:       b.fileUrl ?? '',
+          coverImageUrl: b.coverImageUrl ?? '',
+          status:        b.status ?? '',
+          description:   b.description ?? '',
+        }));
+        const ws = XLSX.utils.json_to_sheet(rows);
+        ws['!cols'] = Object.keys(rows[0] ?? {}).map(k =>
+          ({ wch: ['title', 'description', 'fileUrl', 'coverImageUrl'].includes(k) ? 30 : 15 })
+        );
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Books');
+        const suffix = lang ? `-${lang}` : '';
+        XLSX.writeFile(wb, `books-export${suffix}-${new Date().toISOString().slice(0, 10)}.xlsx`);
+        this.exporting.set(false);
+        this.notify.success(`${rows.length} book${rows.length !== 1 ? 's' : ''} exported`);
+      },
+      error: () => this.exporting.set(false),
+    });
   }
 
   onAction(e: TableActionEvent<Book>): void {
