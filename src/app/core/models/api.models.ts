@@ -57,6 +57,8 @@ export interface PageQuery {
   size?: number;
   sort?: string;
   lang?: string;
+  /** Free-text search across the resource's text fields, independent of language. */
+  q?: string;
 }
 
 /** Field-level validation error returned by the backend's GlobalExceptionHandler. */

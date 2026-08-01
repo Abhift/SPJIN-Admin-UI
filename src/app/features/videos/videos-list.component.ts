@@ -17,6 +17,7 @@ import {
   TableColumn,
 } from '../../shared/components/data-table/data-table.component';
 import { confirm } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { SearchInputComponent } from '../../shared/components/search-input/search-input.component';
 import { VideoFormDialog } from './video-form.dialog';
 
 @Component({
@@ -30,6 +31,7 @@ import { VideoFormDialog } from './video-form.dialog';
     PageHeaderComponent,
     EmptyStateComponent,
     DataTableComponent,
+    SearchInputComponent,
   ],
   templateUrl: './videos-list.component.html',
 })
@@ -45,6 +47,7 @@ export class VideosListComponent {
   readonly pageSize = signal(20);
   readonly loading = signal(true);
   readonly selectedLang = signal<'all' | 'hi' | 'en' | 'gu' | 'ne'>('all');
+  readonly search = signal('');
 
   readonly currentLangLabel = computed(
     () => this.langOptions.find((o) => o.value === this.selectedLang())?.label ?? 'All Languages',
@@ -108,10 +111,24 @@ export class VideosListComponent {
     }, { allowSignalWrites: true });
   }
 
+  onSearch(q: string): void {
+    this.search.set(q);
+    this.pageIndex.set(0);
+    this.load();
+  }
+
   load(lang = this.selectedLang()): void {
     this.loading.set(true);
     const langParam = lang !== 'all' ? lang : undefined;
-    this.api.videos.list({ page: this.pageIndex(), size: this.pageSize(), sort: 'displayOrder,asc', lang: langParam }).subscribe({
+    this.api.videos
+      .list({
+        page: this.pageIndex(),
+        size: this.pageSize(),
+        sort: 'displayOrder,asc',
+        lang: langParam,
+        q: this.search() || undefined,
+      })
+      .subscribe({
       next: (page) => {
         this.rows.set(page.content);
         this.total.set(page.totalElements);

@@ -1,5 +1,7 @@
 <div class="page-container">
   <app-page-header title="Videos" subtitle="Video gallery">
+    <app-search-input placeholder="Search videos…" (search)="onSearch($event)" />
+
     @if (canWrite) {
       <button mat-flat-button color="primary" (click)="create()">
         <mat-icon>add</mat-icon>
@@ -19,7 +21,11 @@
   </app-page-header>
 
   @if (!loading() && rows().length === 0) {
-    <app-empty-state icon="smart_display" message="No videos yet" hint="Add your first video." />
+    <app-empty-state
+      icon="smart_display"
+      [message]="search() ? 'No videos match your search' : 'No videos yet'"
+      [hint]="search() ? 'Try a different search term.' : 'Add your first video.'"
+    />
   } @else {
     <app-data-table
       [columns]="columns"

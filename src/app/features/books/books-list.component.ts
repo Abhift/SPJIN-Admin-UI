@@ -17,6 +17,7 @@ import {
   TableColumn,
 } from '../../shared/components/data-table/data-table.component';
 import { confirm } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { SearchInputComponent } from '../../shared/components/search-input/search-input.component';
 import { BookFormDialog } from './book-form.dialog';
 import { BookExcelImportComponent } from './book-excel-import.component';
 import * as XLSX from 'xlsx';
@@ -33,6 +34,7 @@ import * as XLSX from 'xlsx';
     EmptyStateComponent,
     DataTableComponent,
     BookExcelImportComponent,
+    SearchInputComponent,
   ],
   templateUrl: './books-list.component.html',
 })
@@ -50,6 +52,7 @@ export class BooksListComponent {
   readonly showImport = signal(false);
   readonly exporting = signal(false);
   readonly selectedLang = signal<'all' | 'en' | 'hi' | 'gu' | 'ne'>('all');
+  readonly search = signal('');
 
   readonly langOptions: { value: 'all' | 'en' | 'hi' | 'gu' | 'ne'; label: string }[] = [
     { value: 'all', label: 'All Languages' },
@@ -115,10 +118,18 @@ export class BooksListComponent {
     this.load(lang);
   }
 
+  onSearch(q: string): void {
+    this.search.set(q);
+    this.pageIndex.set(0);
+    this.load();
+  }
+
   load(lang = this.selectedLang()): void {
     this.loading.set(true);
     const langParam = lang !== 'all' ? lang : undefined;
-    this.api.books.list({ page: this.pageIndex(), size: this.pageSize(), lang: langParam }).subscribe({
+    this.api.books
+      .list({ page: this.pageIndex(), size: this.pageSize(), lang: langParam, q: this.search() || undefined })
+      .subscribe({
       next: (page) => {
         this.rows.set(page.content);
         this.total.set(page.totalElements);
@@ -141,7 +152,7 @@ export class BooksListComponent {
   exportExcel(): void {
     this.exporting.set(true);
     const lang = this.selectedLang() !== 'all' ? this.selectedLang() : undefined;
-    this.api.books.list({ size: 1000, lang }).subscribe({
+    this.api.books.list({ size: 1000, lang, q: this.search() || undefined }).subscribe({
       next: page => {
         const rows = page.content.map(b => ({
           title:         b.title ?? '',

@@ -18,6 +18,7 @@ import {
   TableColumn,
 } from '../../shared/components/data-table/data-table.component';
 import { confirm } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { SearchInputComponent } from '../../shared/components/search-input/search-input.component';
 import { CategoryManagerDialog } from './category-manager.dialog';
 
 @Component({
@@ -31,6 +32,7 @@ import { CategoryManagerDialog } from './category-manager.dialog';
     PageHeaderComponent,
     EmptyStateComponent,
     DataTableComponent,
+    SearchInputComponent,
   ],
   templateUrl: './articles-list.component.html',
 })
@@ -47,6 +49,7 @@ export class ArticlesListComponent {
   readonly pageSize = signal(20);
   readonly loading = signal(true);
   readonly selectedLang = signal<'all' | 'en' | 'hi' | 'gu' | 'ne'>('all');
+  readonly search = signal('');
 
   readonly langOptions: { value: 'all' | 'en' | 'hi' | 'gu' | 'ne'; label: string }[] = [
     { value: 'all', label: 'All Languages' },
@@ -111,11 +114,17 @@ export class ArticlesListComponent {
     this.load(lang);
   }
 
+  onSearch(q: string): void {
+    this.search.set(q);
+    this.pageIndex.set(0);
+    this.load();
+  }
+
   load(lang = this.selectedLang()): void {
     this.loading.set(true);
     const langParam = lang !== 'all' ? lang : undefined;
     this.api.articles
-      .list({ page: this.pageIndex(), size: this.pageSize(), lang: langParam })
+      .list({ page: this.pageIndex(), size: this.pageSize(), lang: langParam, q: this.search() || undefined })
       .subscribe({
         next: (page) => {
           this.rows.set(page.content);

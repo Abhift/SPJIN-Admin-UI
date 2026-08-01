@@ -1,5 +1,7 @@
 <div class="page-container">
   <app-page-header title="Books" subtitle="Publications and downloadable books">
+    <app-search-input placeholder="Search books…" (search)="onSearch($event)" />
+
     <button mat-stroked-button [matMenuTriggerFor]="langMenu">
       <mat-icon>translate</mat-icon>
       {{ currentLangLabel() }}
@@ -31,7 +33,11 @@
   }
 
   @if (!loading() && rows().length === 0) {
-    <app-empty-state icon="menu_book" message="No books yet" hint="Add your first book." />
+    <app-empty-state
+      icon="menu_book"
+      [message]="search() ? 'No books match your search' : 'No books yet'"
+      [hint]="search() ? 'Try a different search term.' : 'Add your first book.'"
+    />
   } @else {
     <app-data-table
       [columns]="columns"

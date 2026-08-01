@@ -1,5 +1,7 @@
 <div class="page-container">
   <app-page-header title="Articles" subtitle="News, blogs and long-form content">
+    <app-search-input placeholder="Search articles…" (search)="onSearch($event)" />
+
     <button mat-stroked-button (click)="manageCategories()">
       <mat-icon>category</mat-icon>
       Categories
@@ -25,7 +27,11 @@
   </app-page-header>
 
   @if (!loading() && rows().length === 0) {
-    <app-empty-state icon="article" message="No articles yet" hint="Write your first article." />
+    <app-empty-state
+      icon="article"
+      [message]="search() ? 'No articles match your search' : 'No articles yet'"
+      [hint]="search() ? 'Try a different search term.' : 'Write your first article.'"
+    />
   } @else {
     <app-data-table
       [columns]="columns"
