@@ -48,6 +48,8 @@ export class UploadMediaComponent {
   readonly loading = signal(true);
   readonly uploading = signal(false);
   readonly compressing = signal(false);
+  readonly uploadTotal = signal(0);
+  readonly uploadIndex = signal(0);
 
   /** null = root folder view; a section type string = inside that folder */
   readonly activeFolder = signal<SectionType | null>(null);
@@ -143,14 +145,30 @@ export class UploadMediaComponent {
 
   onFile(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
+    const files = input.files;
+    if (!files || files.length === 0) return;
 
     const folder = this.activeFolder()!;
+    this.uploadFiles(Array.from(files), folder, input);
+  }
 
-    if (file.type.startsWith('image/')) {
-      this.compressing.set(true);
-      this.compressImage(file).then((compressed) => {
+  private async uploadFiles(
+    files: File[],
+    sectionType: string,
+    input: HTMLInputElement,
+  ): Promise<void> {
+    this.uploading.set(true);
+    this.uploadTotal.set(files.length);
+    this.uploadIndex.set(0);
+
+    let successCount = 0;
+
+    for (const file of files) {
+      this.uploadIndex.update((n) => n + 1);
+
+      if (file.type.startsWith('image/')) {
+        this.compressing.set(true);
+        const compressed = await this.compressImage(file);
         this.compressing.set(false);
         const savedBytes = file.size - compressed.size;
         if (savedBytes > 0) {
@@ -158,29 +176,38 @@ export class UploadMediaComponent {
             `Image compressed: ${this.formatSize(file.size)} → ${this.formatSize(compressed.size)}`,
           );
         }
-        this.uploadFile(compressed, folder, input);
-      });
-    } else {
-      const error = this.validateNonImage(file);
-      if (error) {
-        this.notify.error(error);
-        input.value = '';
-        return;
+        if (await this.uploadFile(compressed, sectionType)) successCount++;
+      } else {
+        const error = this.validateNonImage(file);
+        if (error) {
+          this.notify.error(`${file.name}: ${error}`);
+          continue;
+        }
+        if (await this.uploadFile(file, sectionType)) successCount++;
       }
-      this.uploadFile(file, folder, input);
+    }
+
+    this.uploading.set(false);
+    this.uploadTotal.set(0);
+    this.uploadIndex.set(0);
+    input.value = '';
+
+    if (successCount > 0) {
+      this.notify.success(
+        successCount > 1 ? `${successCount} files uploaded successfully` : 'Uploaded successfully',
+      );
     }
   }
 
-  private uploadFile(file: File, sectionType: string, input: HTMLInputElement): void {
-    this.uploading.set(true);
-    this.media.upload(file, sectionType).subscribe({
-      next: (asset) => {
-        this.assets.update((list) => [asset, ...list]);
-        this.uploading.set(false);
-        this.notify.success('Uploaded successfully');
-        input.value = '';
-      },
-      error: () => this.uploading.set(false),
+  private uploadFile(file: File, sectionType: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      this.media.upload(file, sectionType).subscribe({
+        next: (asset) => {
+          this.assets.update((list) => [asset, ...list]);
+          resolve(true);
+        },
+        error: () => resolve(false),
+      });
     });
   }
 

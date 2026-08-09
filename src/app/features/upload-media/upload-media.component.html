@@ -50,12 +50,19 @@
             [disabled]="uploading() || compressing()"
           >
             <mat-icon>cloud_upload</mat-icon>
-            {{ compressing() ? 'Compressing…' : uploading() ? 'Uploading…' : 'Upload to ' + (folder | titlecase) }}
+            {{
+              compressing()
+                ? 'Compressing…'
+                : uploading()
+                  ? 'Uploading ' + uploadIndex() + ' of ' + uploadTotal() + '…'
+                  : 'Upload to ' + (folder | titlecase)
+            }}
           </button>
           <input
             #fileInput
             type="file"
             accept="image/*,.pdf,.doc,.docx"
+            multiple
             hidden
             (change)="onFile($event)"
           />
