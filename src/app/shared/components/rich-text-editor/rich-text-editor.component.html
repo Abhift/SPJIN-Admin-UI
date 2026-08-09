@@ -1,0 +1,15 @@
+<div class="rte" [class.rte-invalid]="control.touched && control.invalid">
+  @if (label) {
+    <span class="rte-label">{{ label }}</span>
+  }
+  <quill-editor
+    [formControl]="control"
+    [modules]="modules"
+    [placeholder]="placeholder"
+    [styles]="{ minHeight: minHeight }"
+    format="html"
+  ></quill-editor>
+  @if (control.touched && control.hasError('required')) {
+    <span class="rte-error">{{ label || 'This field' }} is required</span>
+  }
+</div>

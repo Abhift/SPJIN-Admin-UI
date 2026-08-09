@@ -18,6 +18,7 @@ import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { Article, ArticleRequest, Category } from '../../core/models/content.models';
 import { CONTENT_STATUSES, ContentStatus } from '../../core/models/api.models';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { RichTextEditorComponent } from '../../shared/components/rich-text-editor/rich-text-editor.component';
 import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
 import { LogEntry } from '../../core/models/audit.models';
 import { slugValidator, slugify } from '../../shared/validators/slug.validator';
@@ -37,6 +38,7 @@ import { slugValidator, slugify } from '../../shared/validators/slug.validator';
     MatProgressBarModule,
     MatTooltipModule,
     PageHeaderComponent,
+    RichTextEditorComponent,
     SectionLogsComponent,
     MediaUrlPipe,
   ],
@@ -187,14 +189,32 @@ export class ArticleFormComponent {
       status: a.status,
       categoryId: a.categoryId ?? null,
       featuredImageUrl: a.featuredImageUrl ?? '',
-      summary: a.summary ?? '',
-      content: a.content ?? '',
+      summary: this.ensureHtml(a.summary ?? ''),
+      content: this.ensureHtml(a.content ?? ''),
       seo: {
         metaTitle: a.metaTitle ?? '',
         metaDescription: a.metaDescription ?? '',
         canonicalUrl: a.canonicalUrl ?? '',
       },
     });
+  }
+
+  /**
+   * Articles saved before the rich-text editor existed hold plain text.
+   * Quill only understands HTML, so wrap legacy text in paragraphs to
+   * preserve its line breaks.
+   */
+  private ensureHtml(value: string): string {
+    if (!value || /<[a-z][\s\S]*>/i.test(value)) {
+      return value;
+    }
+    const escape = (s: string) =>
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return value
+      .split(/\n+/)
+      .filter((line) => line.trim().length > 0)
+      .map((line) => `<p>${escape(line)}</p>`)
+      .join('');
   }
 
   save(): void {

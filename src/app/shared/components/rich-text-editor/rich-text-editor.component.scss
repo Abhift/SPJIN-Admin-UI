@@ -1,0 +1,52 @@
+.rte {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.rte-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mat-form-field-label-text-color, rgba(0, 0, 0, 0.6));
+}
+
+.rte-error {
+  font-size: 12px;
+  color: var(--mat-form-field-error-text-color, #ba1a1a);
+}
+
+quill-editor {
+  display: block;
+
+  ::ng-deep {
+    .ql-toolbar.ql-snow {
+      border-radius: 4px 4px 0 0;
+      border-color: rgba(0, 0, 0, 0.38);
+      background: #fafafa;
+    }
+
+    .ql-container.ql-snow {
+      border-radius: 0 0 4px 4px;
+      border-color: rgba(0, 0, 0, 0.38);
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    .ql-editor {
+      line-height: 1.6;
+    }
+
+    .ql-editor.ql-blank::before {
+      font-style: normal;
+      color: rgba(0, 0, 0, 0.38);
+    }
+  }
+}
+
+.rte-invalid quill-editor ::ng-deep {
+  .ql-toolbar.ql-snow,
+  .ql-container.ql-snow {
+    border-color: var(--mat-form-field-error-text-color, #ba1a1a);
+  }
+}

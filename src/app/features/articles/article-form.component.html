@@ -54,18 +54,19 @@
         </mat-form-field>
       </div>
 
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Summary</mat-label>
-        <textarea matInput formControlName="summary" rows="3"></textarea>
-      </mat-form-field>
+      <app-rich-text-editor
+        [control]="form.controls.summary"
+        label="Summary"
+        placeholder="Short summary shown in article listings"
+        minHeight="100px"
+      ></app-rich-text-editor>
 
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Content</mat-label>
-        <textarea matInput formControlName="content" rows="14"></textarea>
-        @if (form.controls.content.hasError('required')) {
-          <mat-error>Content is required</mat-error>
-        }
-      </mat-form-field>
+      <app-rich-text-editor
+        [control]="form.controls.content"
+        label="Content *"
+        placeholder="Write the article content…"
+        minHeight="320px"
+      ></app-rich-text-editor>
 
       <!-- Featured image upload -->
       <div class="featured-image-section">
