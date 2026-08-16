@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { LogEntry } from '../../core/models/audit.models';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -6,14 +6,20 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { ContentApi } from '../../core/services/content-api.service';
 import { NotificationService } from '../../core/services/notification.service';
-import { Video, VideoRequest } from '../../core/models/content.models';
+import { Video, VideoRequest, VideoType } from '../../core/models/content.models';
 import { CONTENT_STATUSES } from '../../core/models/api.models';
 import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
 
 const URL_PATTERN = /^https?:\/\/.+/;
+
+const VIDEO_TYPES: { value: VideoType; label: string; icon: string }[] = [
+  { value: 'VIDEO',           label: 'YouTube Video',    icon: '▶' },
+  { value: 'SHORTS',          label: 'YouTube Shorts',   icon: '📱' },
+  { value: 'PLAYLIST',        label: 'Playlist Video',   icon: '☰' },
+  { value: 'PLAYLIST_SHORTS', label: 'Playlist Shorts',  icon: '📋' },
+];
 
 @Component({
   selector: 'app-video-form-dialog',
@@ -25,14 +31,33 @@ const URL_PATTERN = /^https?:\/\/.+/;
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
-    MatButtonToggleModule,
     SectionLogsComponent,
   ],
   styles: [`
-    .type-toggle { margin-bottom: 16px; }
-    .type-label { display: block; font-size: 12px; color: rgba(0,0,0,.6); margin-bottom: 6px; }
-    mat-button-toggle-group { width: 100%; }
-    mat-button-toggle { flex: 1; }
+    .type-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .type-card {
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: rgba(0,0,0,.7);
+      transition: border-color 0.15s, background 0.15s;
+      user-select: none;
+    }
+    .type-card:hover { border-color: #90caf9; background: #f5f9ff; }
+    .type-card.selected { border-color: #1976d2; background: #e3f2fd; color: #1565c0; }
+    .type-card .icon { font-size: 1rem; }
+    .section-label { font-size: 12px; color: rgba(0,0,0,.6); font-weight: 500; margin-bottom: 4px; display: block; }
   `],
   template: `
     <h2 mat-dialog-title>{{ data ? 'Edit video' : 'New video' }}</h2>
@@ -47,25 +72,27 @@ const URL_PATTERN = /^https?:\/\/.+/;
           }
         </mat-form-field>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Status</mat-label>
-          <mat-select formControlName="status">
-            @for (s of statuses; track s) {
-              <mat-option [value]="s">{{ s }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="status">
+              @for (s of statuses; track s) {
+                <mat-option [value]="s">{{ s }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Language</mat-label>
-          <mat-select formControlName="language">
-            <mat-option value="">— None —</mat-option>
-            <mat-option value="hi">हिन्दी</mat-option>
-            <mat-option value="en">English</mat-option>
-            <mat-option value="gu">ગુજરાતી</mat-option>
-            <mat-option value="ne">नेपाली</mat-option>
-          </mat-select>
-        </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Language</mat-label>
+            <mat-select formControlName="language">
+              <mat-option value="">— None —</mat-option>
+              <mat-option value="hi">हिन्दी</mat-option>
+              <mat-option value="en">English</mat-option>
+              <mat-option value="gu">ગુજરાતી</mat-option>
+              <mat-option value="ne">नेपाली</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
 
         <mat-form-field class="full-width" appearance="outline">
           <mat-label>Display Order</mat-label>
@@ -78,15 +105,21 @@ const URL_PATTERN = /^https?:\/\/.+/;
           }
         </mat-form-field>
 
-        <div class="type-toggle">
-          <span class="type-label">Type</span>
-          <mat-button-toggle-group formControlName="videoType" aria-label="Video type">
-            <mat-button-toggle value="video">YouTube Video</mat-button-toggle>
-            <mat-button-toggle value="playlist">Playlist</mat-button-toggle>
-          </mat-button-toggle-group>
+        <!-- Video Type -->
+        <span class="section-label">Video Type</span>
+        <div class="type-grid">
+          @for (opt of videoTypeOptions; track opt.value) {
+            <div class="type-card"
+                 [class.selected]="selectedType() === opt.value"
+                 (click)="setType(opt.value)">
+              <span class="icon">{{ opt.icon }}</span>
+              {{ opt.label }}
+            </div>
+          }
         </div>
 
-        @if (isVideo()) {
+        <!-- YouTube ID + Thumbnail (VIDEO / SHORTS) -->
+        @if (isYoutubeType()) {
           <mat-form-field class="full-width" appearance="outline">
             <mat-label>YouTube Video ID</mat-label>
             <input matInput formControlName="youtubeVideoId" placeholder="e.g. dQw4w9WgXcQ" />
@@ -102,10 +135,13 @@ const URL_PATTERN = /^https?:\/\/.+/;
               <mat-error>Thumbnail URL is required</mat-error>
             }
             @if (form.controls.thumbnailUrl.hasError('pattern')) {
-              <mat-error>Enter a valid image URL starting with http(s)://</mat-error>
+              <mat-error>Enter a valid URL starting with http(s)://</mat-error>
             }
           </mat-form-field>
-        } @else {
+        }
+
+        <!-- Playlist ID (PLAYLIST / PLAYLIST_SHORTS) -->
+        @if (isPlaylistType()) {
           <mat-form-field class="full-width" appearance="outline">
             <mat-label>Playlist ID</mat-label>
             <input matInput formControlName="playlistId" placeholder="e.g. PL590L5WQmH8fJ54F1fO1l7GgQ5W5R5JwP" />
@@ -133,27 +169,35 @@ const URL_PATTERN = /^https?:\/\/.+/;
   `,
 })
 export class VideoFormDialog {
-  private readonly fb = inject(FormBuilder);
-  private readonly api = inject(ContentApi);
-  private readonly notify = inject(NotificationService);
-  readonly data = inject<Video | null>(MAT_DIALOG_DATA);
-  private readonly ref = inject<MatDialogRef<VideoFormDialog, boolean>>(MatDialogRef);
+  private readonly fb      = inject(FormBuilder);
+  private readonly api     = inject(ContentApi);
+  private readonly notify  = inject(NotificationService);
+  readonly data            = inject<Video | null>(MAT_DIALOG_DATA);
+  private readonly ref     = inject<MatDialogRef<VideoFormDialog, boolean>>(MatDialogRef);
 
-  readonly statuses = CONTENT_STATUSES;
-  readonly saving = signal(false);
-  readonly logs = signal<LogEntry[]>([]);
-  readonly isVideo = signal(!this.data?.playlistId);
+  readonly statuses        = CONTENT_STATUSES;
+  readonly videoTypeOptions = VIDEO_TYPES;
+  readonly saving          = signal(false);
+  readonly logs            = signal<LogEntry[]>([]);
+
+  private initialType(): VideoType {
+    if (this.data?.videoType) return this.data.videoType;
+    return this.data?.playlistId ? 'PLAYLIST' : 'VIDEO';
+  }
+
+  readonly selectedType = signal<VideoType>(this.initialType());
+  readonly isYoutubeType  = computed(() => this.selectedType() === 'VIDEO' || this.selectedType() === 'SHORTS');
+  readonly isPlaylistType = computed(() => this.selectedType() === 'PLAYLIST' || this.selectedType() === 'PLAYLIST_SHORTS');
 
   readonly form = this.fb.nonNullable.group({
-    title: [this.data?.title ?? '', Validators.required],
-    status: [this.data?.status ?? 'DRAFT'],
-    language: [this.data?.language ?? ''],
-    displayOrder: [this.data?.displayOrder ?? 0, [Validators.required, Validators.min(0)]],
-    videoType: [this.data?.playlistId ? 'playlist' : 'video'],
+    title:          [this.data?.title ?? '', Validators.required],
+    status:         [this.data?.status ?? 'DRAFT'],
+    language:       [this.data?.language ?? ''],
+    displayOrder:   [this.data?.displayOrder ?? 0, [Validators.required, Validators.min(0)]],
     youtubeVideoId: [this.data?.youtubeVideoId ?? ''],
-    playlistId: [this.data?.playlistId ?? ''],
-    thumbnailUrl: [this.data?.thumbnailUrl ?? ''],
-    description: [this.data?.description ?? ''],
+    playlistId:     [this.data?.playlistId ?? ''],
+    thumbnailUrl:   [this.data?.thumbnailUrl ?? ''],
+    description:    [this.data?.description ?? ''],
   });
 
   constructor() {
@@ -161,25 +205,30 @@ export class VideoFormDialog {
       this.api.videos.get(this.data.id).subscribe((v) => this.logs.set(v.logs ?? []));
     }
     this.applyValidators();
-    this.form.controls.videoType.valueChanges.subscribe((type) => {
-      this.isVideo.set(type === 'video');
-      this.applyValidators();
-    });
+  }
+
+  setType(type: VideoType): void {
+    this.selectedType.set(type);
+    // Clear fields that don't belong to the new type
+    if (this.isYoutubeType()) {
+      this.form.controls.playlistId.reset('');
+    } else {
+      this.form.controls.youtubeVideoId.reset('');
+      this.form.controls.thumbnailUrl.reset('');
+    }
+    this.applyValidators();
   }
 
   private applyValidators(): void {
     const { youtubeVideoId, playlistId, thumbnailUrl } = this.form.controls;
-    if (this.isVideo()) {
+    if (this.isYoutubeType()) {
       youtubeVideoId.setValidators(Validators.required);
       thumbnailUrl.setValidators([Validators.required, Validators.pattern(URL_PATTERN)]);
       playlistId.clearValidators();
-      playlistId.reset('');
     } else {
       playlistId.setValidators(Validators.required);
       youtubeVideoId.clearValidators();
       thumbnailUrl.clearValidators();
-      youtubeVideoId.reset('');
-      thumbnailUrl.reset('');
     }
     youtubeVideoId.updateValueAndValidity({ emitEvent: false });
     playlistId.updateValueAndValidity({ emitEvent: false });
@@ -194,12 +243,13 @@ export class VideoFormDialog {
     this.saving.set(true);
     const raw = this.form.getRawValue();
     const body: VideoRequest = {
-      title: raw.title.trim(),
-      status: raw.status,
-      language: raw.language || undefined,
+      title:        raw.title.trim(),
+      status:       raw.status as VideoRequest['status'],
+      language:     raw.language || undefined,
+      videoType:    this.selectedType(),
       displayOrder: raw.displayOrder,
-      description: raw.description || undefined,
-      ...(this.isVideo()
+      description:  raw.description || undefined,
+      ...(this.isYoutubeType()
         ? { youtubeVideoId: raw.youtubeVideoId, thumbnailUrl: raw.thumbnailUrl }
         : { playlistId: raw.playlistId }),
     };

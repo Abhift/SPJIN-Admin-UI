@@ -113,6 +113,8 @@ export interface BookRequest {
 
 /* --------------------------------------------------------------- Videos */
 
+export type VideoType = 'VIDEO' | 'SHORTS' | 'PLAYLIST' | 'PLAYLIST_SHORTS';
+
 export interface Video {
   id: string;
   title: string;
@@ -121,6 +123,7 @@ export interface Video {
   playlistId?: string;
   thumbnailUrl?: string;
   language?: string;
+  videoType?: VideoType;
   displayOrder: number;
   status: ContentStatus;
   createdAt?: string;
@@ -135,6 +138,7 @@ export interface VideoRequest {
   playlistId?: string;
   thumbnailUrl?: string;
   language?: string;
+  videoType: VideoType;
   displayOrder: number;
   status: ContentStatus;
 }

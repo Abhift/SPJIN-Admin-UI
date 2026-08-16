@@ -72,8 +72,16 @@ export class VideosListComponent {
   readonly canDelete = this.auth.hasPermission('content:delete');
   readonly canPublish = this.auth.hasPermission('content:publish');
 
+  private readonly videoTypeLabels: Record<string, string> = {
+    VIDEO:           'YouTube Video',
+    SHORTS:          'YouTube Shorts',
+    PLAYLIST:        'Playlist Video',
+    PLAYLIST_SHORTS: 'Playlist Shorts',
+  };
+
   readonly columns: TableColumn<Video>[] = [
     { key: 'title', header: 'Title', value: (r) => r.title },
+    { key: 'videoType', header: 'Type', value: (r) => (r.videoType ? (this.videoTypeLabels[r.videoType] ?? r.videoType) : '—') },
     { key: 'youtubeVideoId', header: 'Video / Playlist ID', value: (r) => r.youtubeVideoId ?? r.playlistId ?? '' },
     { key: 'language', header: 'Language', value: (r) => (r.language ? (this.langLabels[r.language] ?? r.language) : '') },
     { key: 'displayOrder', header: 'Order', value: (r) => String(r.displayOrder) },
