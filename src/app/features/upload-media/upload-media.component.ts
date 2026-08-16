@@ -135,10 +135,11 @@ export class UploadMediaComponent {
     });
   }
 
-  private validateNonImage(file: File): string | null {
+  private validateNonImage(file: File, sectionType: string): string | null {
     const MB = 1024 * 1024;
-    if (file.size > 5 * MB) {
-      return `File must be less than 5 MB (current: ${this.formatSize(file.size)})`;
+    const limitMB = sectionType === 'books' ? 10 : 5;
+    if (file.size > limitMB * MB) {
+      return `File must be less than ${limitMB} MB (current: ${this.formatSize(file.size)})`;
     }
     return null;
   }
@@ -178,7 +179,7 @@ export class UploadMediaComponent {
         }
         if (await this.uploadFile(compressed, sectionType)) successCount++;
       } else {
-        const error = this.validateNonImage(file);
+        const error = this.validateNonImage(file, sectionType);
         if (error) {
           this.notify.error(`${file.name}: ${error}`);
           continue;
