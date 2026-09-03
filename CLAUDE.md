@@ -63,7 +63,7 @@ All user-visible text fields are stored as `{ en: string; hi: string; ne: string
 
 ### Media
 
-`CloudflareMediaService` (`core/services/cloudflare-media.service.ts`) manages CDN-hosted assets (`/admin/cloudflare-media`) tagged by `sectionType` (mirrors `PAGE_SECTION_TYPES` from `api.models.ts`). It is used by the `/upload-media` route to upload and manage section-level assets. Simple resource dialogs (e.g. books, activities) accept image/file URLs as plain text inputs — users paste a URL obtained from the upload-media page.
+`MediaService` (`core/services/media.service.ts`) manages uploaded assets (`/admin/media`) tagged by `sectionType` (mirrors `PAGE_SECTION_TYPES` from `api.models.ts`). It is used by the `/upload-media` route to upload and manage section-level assets. Simple resource dialogs (e.g. books, activities) accept image/file URLs as plain text inputs — users paste a URL obtained from the upload-media page.
 
 ### Audit logs
 
