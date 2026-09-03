@@ -81,6 +81,12 @@ import { SectionLogsComponent } from '../../shared/components/section-logs/secti
           <textarea matInput formControlName="description" rows="3"></textarea>
         </mat-form-field>
 
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Trending text (shown as badge on website)</mat-label>
+          <input matInput formControlName="trendingText" placeholder="e.g. Today's Deal, New Arrival, Bestseller" />
+          <mat-hint>Leave blank to hide the badge.</mat-hint>
+        </mat-form-field>
+
         <!-- Cover image upload -->
         <div class="cover-section">
           <span class="cover-label">Cover image</span>
@@ -195,6 +201,7 @@ export class BookFormDialog {
     author: [this.data?.author ?? ''],
     category: [this.data?.category ?? ''],
     description: [this.data?.description ?? ''],
+    trendingText: [this.data?.trendingText ?? ''],
     coverImageUrl: [this.data?.coverImageUrl ?? ''],
     fileUrl: [this.data?.fileUrl ?? ''],
   });
@@ -305,6 +312,7 @@ export class BookFormDialog {
       author: raw.author || undefined,
       category: raw.category || undefined,
       description: raw.description || undefined,
+      trendingText: raw.trendingText || undefined,
       coverImageUrl: raw.coverImageUrl.trim() || undefined,
       fileUrl: raw.fileUrl.trim() || undefined,
     };

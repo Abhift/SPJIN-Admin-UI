@@ -92,6 +92,7 @@ export interface Book {
   author?: string;
   category?: string;
   description?: string;
+  trendingText?: string;
   coverImageUrl?: string;
   fileUrl?: string;
   status: ContentStatus;
@@ -106,6 +107,7 @@ export interface BookRequest {
   author?: string;
   category?: string;
   description?: string;
+  trendingText?: string;
   coverImageUrl?: string;
   fileUrl?: string;
   status: ContentStatus;
