@@ -29,6 +29,9 @@ export const PAGE_SECTION_TYPES = [
   'event-gallery',
   'print-media',
   'donation',
+  'books-banner',
+  'articles-banner',
+  'videos-banner',
 ] as const;
 
 export type PageSectionType = (typeof PAGE_SECTION_TYPES)[number];

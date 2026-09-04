@@ -59,6 +59,18 @@ export class UploadMediaComponent {
     { name: 'UpiQrCode', label: 'UPI QR Code', icon: 'qr_code_2' },
   ] as const;
 
+  readonly BOOKS_BANNER_SLOTS = [
+    { name: 'page-banner', label: 'Books Page Banner', icon: 'auto_stories' },
+  ] as const;
+
+  readonly ARTICLES_BANNER_SLOTS = [
+    { name: 'page-banner', label: 'Articles Page Banner', icon: 'article' },
+  ] as const;
+
+  readonly VIDEOS_BANNER_SLOTS = [
+    { name: 'page-banner', label: 'Videos Page Banner', icon: 'smart_display' },
+  ] as const;
+
   readonly uploadingSlot = signal<string | null>(null);
 
   readonly folderAssets = computed(() => {
@@ -282,6 +294,37 @@ export class UploadMediaComponent {
     });
   }
 
+  onBannerFile(event: Event, sectionType: string, slotName: string, input: HTMLInputElement): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.uploadingSlot.set(slotName);
+    this.compressImage(file).then((compressed) => {
+      this.media.upload(compressed, sectionType as any, slotName).subscribe({
+        next: (asset) => {
+          this.assets.update((list) => {
+            const rest = list.filter((a) => {
+              const filename = a.url.split('/').pop() ?? '';
+              const base = filename.replace(/\.[^.]+$/, '');
+              return !(a.sectionType === sectionType && base === slotName);
+            });
+            return [asset, ...rest];
+          });
+          this.uploadingSlot.set(null);
+          this.notify.success(`${slotName} updated`);
+          input.value = '';
+        },
+        error: () => {
+          this.uploadingSlot.set(null);
+          input.value = '';
+        },
+      });
+    });
+  }
+
+  onBooksBannerFile(event: Event, slotName: string, input: HTMLInputElement): void {
+    this.onBannerFile(event, 'books-banner', slotName, input);
+  }
+
   folderIcon(type: string): string {
     const icons: Record<string, string> = {
       'hero': 'wallpaper',
@@ -299,6 +342,9 @@ export class UploadMediaComponent {
       'achievements': 'emoji_events',
       'general': 'folder',
       'donation': 'volunteer_activism',
+      'books-banner': 'image',
+      'articles-banner': 'image',
+      'videos-banner': 'image',
     };
     return icons[type] ?? 'folder';
   }
