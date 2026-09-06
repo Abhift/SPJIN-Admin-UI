@@ -71,6 +71,10 @@ export class UploadMediaComponent {
     { name: 'page-banner', label: 'Videos Page Banner', icon: 'smart_display' },
   ] as const;
 
+  readonly PATRIKA_BANNER_SLOTS = [
+    { name: 'page-banner', label: 'Patrika Page Banner', icon: 'newspaper' },
+  ] as const;
+
   readonly uploadingSlot = signal<string | null>(null);
 
   readonly folderAssets = computed(() => {
@@ -345,6 +349,7 @@ export class UploadMediaComponent {
       'books-banner': 'image',
       'articles-banner': 'image',
       'videos-banner': 'image',
+      'patrika-banner': 'newspaper',
     };
     return icons[type] ?? 'folder';
   }
