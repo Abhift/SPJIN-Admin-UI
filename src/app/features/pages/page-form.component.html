@@ -56,7 +56,7 @@
       }
 
       <mat-accordion multi formArrayName="sections">
-        @for (section of sections.controls; track $index) {
+        @for (section of sections.controls; track section) {
           <mat-expansion-panel [formGroupName]="$index">
             <mat-expansion-panel-header>
               <mat-panel-title>
