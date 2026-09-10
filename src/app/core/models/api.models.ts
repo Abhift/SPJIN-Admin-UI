@@ -33,7 +33,7 @@ export const PAGE_SECTION_TYPES = [
   'articles-banner',
   'videos-banner',
   'patrika-banner',
-  'swami-ji-pic',
+  'home-swami-ji',
 ] as const;
 
 export type PageSectionType = (typeof PAGE_SECTION_TYPES)[number];

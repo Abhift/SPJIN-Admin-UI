@@ -354,7 +354,7 @@ export class UploadMediaComponent {
       'articles-banner': 'image',
       'videos-banner': 'image',
       'patrika-banner': 'newspaper',
-      'swami-ji-pic': 'person',
+      'home-swami-ji': 'person',
     };
     return icons[type] ?? 'folder';
   }

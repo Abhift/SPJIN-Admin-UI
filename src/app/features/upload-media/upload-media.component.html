@@ -40,7 +40,7 @@
         </span>
       </div>
 
-      @if (folder !== 'donation' && folder !== 'books-banner' && folder !== 'articles-banner' && folder !== 'videos-banner' && folder !== 'patrika-banner' && folder !== 'swami-ji-pic') {
+      @if (folder !== 'donation' && folder !== 'books-banner' && folder !== 'articles-banner' && folder !== 'videos-banner' && folder !== 'patrika-banner' && folder !== 'home-swami-ji') {
         <div class="upload-controls">
           <button
             mat-flat-button
@@ -237,7 +237,7 @@
             </div>
           }
         </div>
-      } @else if (folder === 'swami-ji-pic') {
+      } @else if (folder === 'home-swami-ji') {
         <!-- Swami Ji Pic: single portrait slot — shows any asset in the folder -->
         <div class="donation-grid">
           @for (slot of SWAMI_JI_PIC_SLOTS; track slot.name) {
@@ -264,7 +264,7 @@
               </div>
               <div class="slot-actions">
                 <input type="file" accept="image/*" hidden #swamiJiPicInput
-                  (change)="onBannerFile($event, 'swami-ji-pic', slot.name, swamiJiPicInput)" />
+                  (change)="onBannerFile($event, 'home-swami-ji', slot.name, swamiJiPicInput)" />
                 <button mat-flat-button color="primary" type="button"
                   (click)="swamiJiPicInput.click()"
                   [disabled]="uploadingSlot() === slot.name || compressing()">
