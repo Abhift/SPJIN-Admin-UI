@@ -147,7 +147,21 @@ export class UploadMediaComponent {
 
   private loadEventGalleries(): void {
     this.contentApi.eventGalleries.list({ page: 0, size: 200 }).subscribe({
-      next: (page) => this.eventGalleries.set(page.content),
+      next: (page) => {
+        this.eventGalleries.set(page.content);
+        // Fetch full detail for each gallery to get the images array
+        // (list response only returns imageCount, not the images themselves)
+        page.content.forEach(g => {
+          this.contentApi.eventGalleries.get(g.id).subscribe({
+            next: (full) => {
+              this.eventGalleries.update(list =>
+                list.map(eg => eg.id === full.id ? full : eg)
+              );
+            },
+            error: () => {},
+          });
+        });
+      },
       error: () => {},
     });
   }
