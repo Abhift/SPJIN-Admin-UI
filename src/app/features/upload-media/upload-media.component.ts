@@ -18,6 +18,8 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { confirm } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
+import { ContentApi } from '../../core/services/content-api.service';
+import { EventGallery, EventGalleryImage } from '../../core/models/content.models';
 
 @Component({
   selector: 'app-upload-media',
@@ -42,6 +44,7 @@ export class UploadMediaComponent {
   private readonly notify = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
   private readonly clipboard = inject(Clipboard);
+  private readonly contentApi = inject(ContentApi);
 
   readonly sectionTypes = SECTION_TYPES;
   readonly assets = signal<MediaAsset[]>([]);
@@ -53,6 +56,24 @@ export class UploadMediaComponent {
 
   /** null = root folder view; a section type string = inside that folder */
   readonly activeFolder = signal<SectionType | null>(null);
+
+  /** Event gallery sub-folder state */
+  readonly eventGalleries = signal<EventGallery[]>([]);
+  readonly activeEventSlug = signal<string | null>(null);
+  readonly activeEventGallery = signal<EventGallery | null>(null);
+  readonly eventSlugImages = computed<EventGalleryImage[]>(() =>
+    this.activeEventGallery()?.images ?? []
+  );
+
+  /** Assets in event-gallery section not linked to any slug */
+  readonly unorganizedEventAssets = computed<MediaAsset[]>(() => {
+    const linkedUrls = new Set(
+      this.eventGalleries().flatMap(g => (g.images ?? []).map(i => i.imageUrl))
+    );
+    return this.assets().filter(
+      a => a.sectionType === 'event-gallery' && !linkedUrls.has(a.url)
+    );
+  });
 
   readonly DONATION_SLOTS = [
     { name: 'home-hero', label: 'Home Hero Image', icon: 'home' },
@@ -114,10 +135,42 @@ export class UploadMediaComponent {
 
   enterFolder(type: SectionType): void {
     this.activeFolder.set(type);
+    if (type === 'event-gallery') {
+      this.loadEventGalleries();
+    }
   }
 
   exitFolder(): void {
     this.activeFolder.set(null);
+    this.activeEventSlug.set(null);
+  }
+
+  private loadEventGalleries(): void {
+    this.contentApi.eventGalleries.list({ page: 0, size: 200 }).subscribe({
+      next: (page) => this.eventGalleries.set(page.content),
+      error: () => {},
+    });
+  }
+
+  enterEventSlug(slug: string): void {
+    this.activeEventSlug.set(slug);
+    this.activeEventGallery.set(null);
+    const gallery = this.eventGalleries().find(g => g.slug === slug);
+    if (!gallery) return;
+    this.contentApi.eventGalleries.get(gallery.id).subscribe({
+      next: (full) => this.activeEventGallery.set(full),
+      error: () => {},
+    });
+  }
+
+  exitEventSlug(): void {
+    this.activeEventSlug.set(null);
+    this.activeEventGallery.set(null);
+  }
+
+  eventGalleryImageCount(slug: string): number {
+    const g = this.eventGalleries().find(eg => eg.slug === slug);
+    return g?.imageCount ?? g?.images?.length ?? 0;
   }
 
   private compressImage(file: File): Promise<File> {
