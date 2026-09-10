@@ -75,6 +75,10 @@ export class UploadMediaComponent {
     { name: 'page-banner', label: 'Patrika Page Banner', icon: 'newspaper' },
   ] as const;
 
+  readonly SWAMI_JI_PIC_SLOTS = [
+    { name: 'swami-ji', label: 'Swami Ji Portrait', icon: 'person' },
+  ] as const;
+
   readonly uploadingSlot = signal<string | null>(null);
 
   readonly folderAssets = computed(() => {
@@ -350,6 +354,7 @@ export class UploadMediaComponent {
       'articles-banner': 'image',
       'videos-banner': 'image',
       'patrika-banner': 'newspaper',
+      'swami-ji-pic': 'person',
     };
     return icons[type] ?? 'folder';
   }
