@@ -19,7 +19,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
 import { confirm } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { ContentApi } from '../../core/services/content-api.service';
-import { EventGallery, EventGalleryImage } from '../../core/models/content.models';
+import { Book, EventGallery, EventGalleryImage } from '../../core/models/content.models';
 
 @Component({
   selector: 'app-upload-media',
@@ -72,6 +72,28 @@ export class UploadMediaComponent {
     );
     return this.assets().filter(
       a => a.sectionType === 'event-gallery' && !linkedUrls.has(a.url)
+    );
+  });
+
+  /** Book sub-folder state */
+  readonly books = signal<Book[]>([]);
+  readonly activeBook = signal<Book | null>(null);
+  readonly booksShowUnorganized = signal(false);
+
+  readonly activeBookAssets = computed<MediaAsset[]>(() => {
+    const book = this.activeBook();
+    if (!book) return [];
+    return this.assets().filter(
+      a => a.url === book.coverImageUrl || a.url === book.fileUrl
+    );
+  });
+
+  readonly unorganizedBookAssets = computed<MediaAsset[]>(() => {
+    const linkedUrls = new Set(
+      this.books().flatMap(b => [b.coverImageUrl, b.fileUrl].filter(Boolean) as string[])
+    );
+    return this.assets().filter(
+      a => a.sectionType === 'books' && !linkedUrls.has(a.url)
     );
   });
 
@@ -138,11 +160,16 @@ export class UploadMediaComponent {
     if (type === 'event-gallery') {
       this.loadEventGalleries();
     }
+    if (type === 'books') {
+      this.loadBooks();
+    }
   }
 
   exitFolder(): void {
     this.activeFolder.set(null);
     this.activeEventSlug.set(null);
+    this.activeBook.set(null);
+    this.booksShowUnorganized.set(false);
   }
 
   private loadEventGalleries(): void {
@@ -180,6 +207,34 @@ export class UploadMediaComponent {
   exitEventSlug(): void {
     this.activeEventSlug.set(null);
     this.activeEventGallery.set(null);
+  }
+
+  private loadBooks(): void {
+    this.contentApi.books.list({ page: 0, size: 200 }).subscribe({
+      next: (page) => this.books.set(page.content),
+      error: () => {},
+    });
+  }
+
+  enterBook(book: Book): void {
+    this.activeBook.set(book);
+    this.booksShowUnorganized.set(false);
+  }
+
+  enterBookUnorganized(): void {
+    this.activeBook.set(null);
+    this.booksShowUnorganized.set(true);
+  }
+
+  exitBook(): void {
+    this.activeBook.set(null);
+    this.booksShowUnorganized.set(false);
+  }
+
+  bookAssetCount(book: Book): number {
+    return this.assets().filter(
+      a => a.url === book.coverImageUrl || a.url === book.fileUrl
+    ).length;
   }
 
   eventGalleryImageCount(slug: string): number {

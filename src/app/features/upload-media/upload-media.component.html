@@ -30,13 +30,23 @@
     <div class="folder-header">
       <div class="breadcrumb">
         <button mat-icon-button type="button"
-          (click)="activeEventSlug() ? exitEventSlug() : exitFolder()"
+          (click)="activeBook() || booksShowUnorganized() ? exitBook() : activeEventSlug() ? exitEventSlug() : exitFolder()"
           matTooltip="Back">
           <mat-icon>arrow_back</mat-icon>
         </button>
         <span class="breadcrumb-root" (click)="exitFolder()">Media</span>
         <mat-icon class="breadcrumb-sep">chevron_right</mat-icon>
-        @if (activeEventSlug()) {
+        @if (activeBook() || booksShowUnorganized()) {
+          <span class="breadcrumb-root" (click)="exitBook()">
+            <mat-icon class="breadcrumb-folder-icon">{{ folderIcon(folder) }}</mat-icon>
+            {{ folder | titlecase }}
+          </span>
+          <mat-icon class="breadcrumb-sep">chevron_right</mat-icon>
+          <span class="breadcrumb-active">
+            <mat-icon class="breadcrumb-folder-icon">{{ booksShowUnorganized() ? 'folder_open' : 'menu_book' }}</mat-icon>
+            {{ booksShowUnorganized() ? 'Unorganized' : activeBook()!.title }}
+          </span>
+        } @else if (activeEventSlug()) {
           <span class="breadcrumb-root" (click)="exitEventSlug()">
             <mat-icon class="breadcrumb-folder-icon">{{ folderIcon(folder) }}</mat-icon>
             {{ folder | titlecase }}
@@ -54,7 +64,7 @@
         }
       </div>
 
-      @if (folder !== 'donation' && folder !== 'books-banner' && folder !== 'articles-banner' && folder !== 'videos-banner' && folder !== 'patrika-banner' && folder !== 'home-swami-ji' && folder !== 'event-gallery') {
+      @if (folder !== 'donation' && folder !== 'books-banner' && folder !== 'articles-banner' && folder !== 'videos-banner' && folder !== 'patrika-banner' && folder !== 'home-swami-ji' && folder !== 'event-gallery' && !(folder === 'books' && (activeBook() || booksShowUnorganized()))) {
         <div class="upload-controls">
           <button
             mat-flat-button
@@ -424,6 +434,104 @@
               }
             </div>
           }
+        }
+      } @else if (folder === 'books' && !activeBook() && !booksShowUnorganized()) {
+        <!-- Books: title-based sub-folders -->
+        @if (books().length === 0 && unorganizedBookAssets().length === 0) {
+          <app-empty-state
+            icon="menu_book"
+            message="No books found. Create one in Books first."
+          ></app-empty-state>
+        } @else {
+          <div class="folder-grid">
+            @for (book of books(); track book.id) {
+              <button class="folder-card" type="button" (click)="enterBook(book)">
+                <mat-icon class="folder-icon">menu_book</mat-icon>
+                <span class="folder-name">{{ book.title }}</span>
+                <span class="folder-count">
+                  {{ bookAssetCount(book) }} file{{ bookAssetCount(book) === 1 ? '' : 's' }}
+                </span>
+              </button>
+            }
+            @if (unorganizedBookAssets().length > 0) {
+              <button class="folder-card" type="button" (click)="enterBookUnorganized()">
+                <mat-icon class="folder-icon">folder_open</mat-icon>
+                <span class="folder-name">Unorganized</span>
+                <span class="folder-count">
+                  {{ unorganizedBookAssets().length }} file{{ unorganizedBookAssets().length === 1 ? '' : 's' }}
+                </span>
+              </button>
+            }
+          </div>
+        }
+      } @else if (folder === 'books' && booksShowUnorganized()) {
+        <!-- Books: unorganized assets -->
+        <div class="asset-grid">
+          @for (asset of unorganizedBookAssets(); track asset.id) {
+            <div class="asset-card">
+              <div class="asset-preview">
+                @if (isImage(asset)) {
+                  <img [src]="asset.url | mediaUrl" [alt]="asset.fileName" loading="lazy" />
+                } @else {
+                  <mat-icon class="doc-icon">{{ fileIcon(asset) }}</mat-icon>
+                }
+              </div>
+              <div class="asset-body">
+                <p class="asset-name" [matTooltip]="asset.fileName">{{ asset.fileName }}</p>
+                <p class="asset-meta">{{ formatSize(asset.fileSize) }} · {{ asset.uploadedAt | date: 'dd MMM yyyy' }}</p>
+                <p class="asset-url" [matTooltip]="asset.url">{{ asset.url }}</p>
+              </div>
+              <div class="asset-actions">
+                <button mat-stroked-button class="copy-btn" type="button"
+                  (click)="copyUrl(asset.url)" matTooltip="Copy URL">
+                  <mat-icon>content_copy</mat-icon> Copy URL
+                </button>
+                <button mat-icon-button color="warn" type="button"
+                  (click)="remove(asset)" matTooltip="Delete">
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      } @else if (folder === 'books' && activeBook()) {
+        <!-- Books: cover + PDF for a specific book -->
+        @if (activeBookAssets().length === 0) {
+          <app-empty-state
+            icon="menu_book"
+            message="No media files linked to this book yet."
+          ></app-empty-state>
+        } @else {
+          <div class="asset-grid">
+            @for (asset of activeBookAssets(); track asset.id) {
+              <div class="asset-card">
+                <div class="asset-preview">
+                  @if (isImage(asset)) {
+                    <img [src]="asset.url | mediaUrl" [alt]="asset.fileName" loading="lazy" />
+                  } @else {
+                    <mat-icon class="doc-icon">{{ fileIcon(asset) }}</mat-icon>
+                  }
+                </div>
+                <div class="asset-body">
+                  <p class="asset-name" [matTooltip]="asset.fileName">
+                    {{ asset.url === activeBook()!.coverImageUrl ? 'Cover Page' : 'Book PDF' }}
+                  </p>
+                  <p class="asset-meta">{{ formatSize(asset.fileSize) }} · {{ asset.uploadedAt | date: 'dd MMM yyyy' }}</p>
+                  <p class="asset-url" [matTooltip]="asset.url">{{ asset.url }}</p>
+                </div>
+                <div class="asset-actions">
+                  <button mat-stroked-button class="copy-btn" type="button"
+                    (click)="copyUrl(asset.url)" matTooltip="Copy URL">
+                    <mat-icon>content_copy</mat-icon> Copy URL
+                  </button>
+                  <button mat-icon-button color="warn" type="button"
+                    (click)="remove(asset)" matTooltip="Delete">
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
         }
       } @else if (folderAssets().length === 0) {
         <app-empty-state
