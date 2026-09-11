@@ -20,6 +20,7 @@ import { confirm } from '../../shared/components/confirm-dialog/confirm-dialog.c
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 import { ContentApi } from '../../core/services/content-api.service';
 import { Book, EventGallery, EventGalleryImage } from '../../core/models/content.models';
+import { compressImage, validateImageSize, validateFileSize, formatFileSize } from '../../shared/utils/upload.utils';
 
 @Component({
   selector: 'app-upload-media',
@@ -242,48 +243,10 @@ export class UploadMediaComponent {
     return g?.imageCount ?? g?.images?.length ?? 0;
   }
 
-  private compressImage(file: File): Promise<File> {
-    return new Promise((resolve) => {
-      if (!file.type.startsWith('image/')) {
-        resolve(file);
-        return;
-      }
-      const img = new Image();
-      const objectUrl = URL.createObjectURL(file);
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        canvas.getContext('2d')!.drawImage(img, 0, 0);
-        URL.revokeObjectURL(objectUrl);
-        canvas.toBlob(
-          (blob) => {
-            if (blob && blob.size < file.size) {
-              const name = file.name.replace(/\.[^.]+$/, '.webp');
-              resolve(new File([blob], name, { type: 'image/webp' }));
-            } else {
-              resolve(file);
-            }
-          },
-          'image/webp',
-          0.85,
-        );
-      };
-      img.onerror = () => {
-        URL.revokeObjectURL(objectUrl);
-        resolve(file);
-      };
-      img.src = objectUrl;
-    });
-  }
+  private readonly compressImage = compressImage;
 
-  private validateNonImage(file: File, sectionType: string): string | null {
-    const MB = 1024 * 1024;
-    const limitMB = sectionType === 'books' ? 10 : 5;
-    if (file.size > limitMB * MB) {
-      return `File must be less than ${limitMB} MB (current: ${this.formatSize(file.size)})`;
-    }
-    return null;
+  private validateNonImage(file: File): string | null {
+    return validateFileSize(file);
   }
 
   onFile(event: Event): void {
@@ -319,9 +282,14 @@ export class UploadMediaComponent {
             `Image compressed: ${this.formatSize(file.size)} → ${this.formatSize(compressed.size)}`,
           );
         }
+        const imgError = validateImageSize(compressed);
+        if (imgError) {
+          this.notify.error(`${file.name}: ${imgError}`);
+          continue;
+        }
         if (await this.uploadFile(compressed, sectionType)) successCount++;
       } else {
-        const error = this.validateNonImage(file, sectionType);
+        const error = this.validateNonImage(file);
         if (error) {
           this.notify.error(`${file.name}: ${error}`);
           continue;
@@ -481,9 +449,5 @@ export class UploadMediaComponent {
     return icons[type] ?? 'folder';
   }
 
-  formatSize(bytes: number): string {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  }
+  formatSize = formatFileSize;
 }

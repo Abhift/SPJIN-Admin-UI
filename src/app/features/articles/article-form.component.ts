@@ -22,6 +22,7 @@ import { RichTextEditorComponent } from '../../shared/components/rich-text-edito
 import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
 import { LogEntry } from '../../core/models/audit.models';
 import { slugValidator, slugify } from '../../shared/validators/slug.validator';
+import { compressImage, validateImageSize } from '../../shared/utils/upload.utils';
 
 @Component({
   selector: 'app-article-form',
@@ -116,7 +117,14 @@ export class ArticleFormComponent {
     const file = input.files?.[0];
     if (!file) return;
     this.uploadingFeatured.set(true);
-    this.compressImage(file).then((compressed) => {
+    compressImage(file).then((compressed) => {
+      const err = validateImageSize(compressed);
+      if (err) {
+        this.notify.error(err);
+        this.uploadingFeatured.set(false);
+        input.value = '';
+        return;
+      }
       this.media.upload(compressed, 'articles').subscribe({
         next: (asset) => {
           this.form.controls.featuredImageUrl.setValue(asset.url);
@@ -135,41 +143,6 @@ export class ArticleFormComponent {
     const url = this.form.controls.featuredImageUrl.value;
     this.mediaDelete.confirmRemove(url, () => {
       this.form.controls.featuredImageUrl.setValue('');
-    });
-  }
-
-  private compressImage(file: File): Promise<File> {
-    return new Promise((resolve) => {
-      if (!file.type.startsWith('image/')) {
-        resolve(file);
-        return;
-      }
-      const img = new Image();
-      const objectUrl = URL.createObjectURL(file);
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        canvas.getContext('2d')!.drawImage(img, 0, 0);
-        URL.revokeObjectURL(objectUrl);
-        canvas.toBlob(
-          (blob) => {
-            if (blob && blob.size < file.size) {
-              const name = file.name.replace(/\.[^.]+$/, '.webp');
-              resolve(new File([blob], name, { type: 'image/webp' }));
-            } else {
-              resolve(file);
-            }
-          },
-          'image/webp',
-          0.85,
-        );
-      };
-      img.onerror = () => {
-        URL.revokeObjectURL(objectUrl);
-        resolve(file);
-      };
-      img.src = objectUrl;
     });
   }
 

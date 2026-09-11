@@ -18,6 +18,7 @@ import { CONTENT_STATUSES, ContentStatus } from '../../core/models/api.models';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { SectionLogsComponent } from '../../shared/components/section-logs/section-logs.component';
 import { LogEntry } from '../../core/models/audit.models';
+import { compressImage, validateImageSize } from '../../shared/utils/upload.utils';
 import { slugValidator, slugify } from '../../shared/validators/slug.validator';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 
@@ -110,7 +111,9 @@ export class EventGalleryFormComponent {
     const oldUrl = this.images.at(index).get('imageUrl')!.value as string;
 
     this.uploadingIndex.set(index);
-    this.compressImage(file).then((compressed) => {
+    compressImage(file).then((compressed) => {
+      const err = validateImageSize(compressed);
+      if (err) { this.notify.error(err); this.uploadingIndex.set(null); input.value = ''; return; }
       this.media.upload(compressed, 'event-gallery').subscribe({
         next: (asset) => {
           this.images.at(index).get('imageUrl')!.setValue(asset.url);
@@ -143,7 +146,15 @@ export class EventGalleryFormComponent {
 
     files.forEach((file, i) => {
       const rowIndex = startIndex + i;
-      this.compressImage(file).then((compressed) => {
+      compressImage(file).then((compressed) => {
+        const err = validateImageSize(compressed);
+        if (err) {
+          this.notify.error(`${file.name}: ${err}`);
+          prog.done++;
+          if (prog.done === prog.total) { this.multiProgress.set(null); input.value = ''; }
+          else this.multiProgress.set({ ...prog });
+          return;
+        }
         this.media.upload(compressed, 'event-gallery').subscribe({
           next: (asset) => {
             this.images.at(rowIndex).get('imageUrl')!.setValue(asset.url);
@@ -158,41 +169,6 @@ export class EventGalleryFormComponent {
           },
         });
       });
-    });
-  }
-
-  private compressImage(file: File): Promise<File> {
-    return new Promise((resolve) => {
-      if (!file.type.startsWith('image/')) {
-        resolve(file);
-        return;
-      }
-      const img = new Image();
-      const objectUrl = URL.createObjectURL(file);
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        canvas.getContext('2d')!.drawImage(img, 0, 0);
-        URL.revokeObjectURL(objectUrl);
-        canvas.toBlob(
-          (blob) => {
-            if (blob && blob.size < file.size) {
-              const name = file.name.replace(/\.[^.]+$/, '.webp');
-              resolve(new File([blob], name, { type: 'image/webp' }));
-            } else {
-              resolve(file);
-            }
-          },
-          'image/webp',
-          0.85,
-        );
-      };
-      img.onerror = () => {
-        URL.revokeObjectURL(objectUrl);
-        resolve(file);
-      };
-      img.src = objectUrl;
     });
   }
 
