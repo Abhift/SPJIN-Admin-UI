@@ -119,6 +119,11 @@ export class UploadMediaComponent {
     { name: 'page-banner', label: 'Patrika Page Banner', icon: 'newspaper' },
   ] as const;
 
+  readonly UNIVERSITY_PROSPECTUS_SLOTS = [
+    { name: 'SPJIN_University_English', label: 'Prospectus — English', icon: 'picture_as_pdf' },
+    { name: 'SPJIN_University_Hindi', label: 'Prospectus — Hindi', icon: 'picture_as_pdf' },
+  ] as const;
+
   readonly SWAMI_JI_PIC_SLOTS = [
     { name: 'swami-ji', label: 'Swami Ji Portrait', icon: 'person' },
   ] as const;
@@ -423,6 +428,38 @@ export class UploadMediaComponent {
     this.onBannerFile(event, 'books-banner', slotName, input);
   }
 
+  onUniversityProspectusFile(event: Event, slotName: string, input: HTMLInputElement): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.uploadingSlot.set(slotName);
+    const error = this.validateNonImage(file);
+    if (error) {
+      this.notify.error(`${file.name}: ${error}`);
+      this.uploadingSlot.set(null);
+      input.value = '';
+      return;
+    }
+    this.media.upload(file, 'university-prospectus', slotName).subscribe({
+      next: (asset) => {
+        this.assets.update((list) => {
+          const rest = list.filter((a) => {
+            const filename = a.url.split('/').pop() ?? '';
+            const base = filename.replace(/\.[^.]+$/, '');
+            return !(a.sectionType === 'university-prospectus' && base === slotName);
+          });
+          return [asset, ...rest];
+        });
+        this.uploadingSlot.set(null);
+        this.notify.success(`${slotName} updated`);
+        input.value = '';
+      },
+      error: () => {
+        this.uploadingSlot.set(null);
+        input.value = '';
+      },
+    });
+  }
+
   folderIcon(type: string): string {
     const icons: Record<string, string> = {
       'hero': 'wallpaper',
@@ -445,6 +482,7 @@ export class UploadMediaComponent {
       'videos-banner': 'image',
       'patrika-banner': 'newspaper',
       'home-swami-ji': 'person',
+      'university-prospectus': 'school',
     };
     return icons[type] ?? 'folder';
   }

@@ -64,7 +64,7 @@
         }
       </div>
 
-      @if (folder !== 'donation' && folder !== 'books-banner' && folder !== 'articles-banner' && folder !== 'videos-banner' && folder !== 'patrika-banner' && folder !== 'home-swami-ji' && folder !== 'event-gallery' && !(folder === 'books' && (activeBook() || booksShowUnorganized()))) {
+      @if (folder !== 'donation' && folder !== 'books-banner' && folder !== 'articles-banner' && folder !== 'videos-banner' && folder !== 'patrika-banner' && folder !== 'home-swami-ji' && folder !== 'university-prospectus' && folder !== 'event-gallery' && !(folder === 'books' && (activeBook() || booksShowUnorganized()))) {
         <div class="upload-controls">
           <button
             mat-flat-button
@@ -256,6 +256,56 @@
                   [disabled]="uploadingSlot() === slot.name || compressing()">
                   <mat-icon>cloud_upload</mat-icon>
                   {{ uploadingSlot() === slot.name ? 'Uploading…' : compressing() ? 'Compressing…' : (donationSlotAsset(slot.name) ? 'Replace' : 'Upload') }}
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      } @else if (folder === 'university-prospectus') {
+        <!-- University Prospectus: two fixed-name PDF slots -->
+        <div class="donation-grid">
+          @for (slot of UNIVERSITY_PROSPECTUS_SLOTS; track slot.name) {
+            <div class="donation-slot">
+              <div class="slot-header">
+                <mat-icon>{{ slot.icon }}</mat-icon>
+                <span class="slot-label">{{ slot.label }}</span>
+              </div>
+              <div class="slot-preview">
+                @if (donationSlotAsset(slot.name); as asset) {
+                  <div class="slot-empty" style="padding: 12px 0;">
+                    <mat-icon style="font-size: 48px; width: 48px; height: 48px; color: #e53935;">picture_as_pdf</mat-icon>
+                    <span>{{ asset.fileName }}</span>
+                  </div>
+                  <div class="slot-meta">
+                    <span>{{ formatSize(asset.fileSize) }} · {{ asset.uploadedAt | date: 'dd MMM yyyy' }}</span>
+                    <button mat-stroked-button class="copy-btn" type="button" (click)="copyUrl(asset.url)" matTooltip="Copy URL">
+                      <mat-icon>content_copy</mat-icon> Copy URL
+                    </button>
+                  </div>
+                } @else {
+                  <div class="slot-empty">
+                    <mat-icon>picture_as_pdf</mat-icon>
+                    <span>No PDF uploaded yet</span>
+                  </div>
+                }
+              </div>
+              <div class="slot-actions">
+                <input
+                  type="file"
+                  accept=".pdf"
+                  hidden
+                  #prospectusInput
+                  (change)="onUniversityProspectusFile($event, slot.name, prospectusInput)"
+                />
+                <button
+                  mat-flat-button
+                  color="primary"
+                  type="button"
+                  (click)="prospectusInput.click()"
+                  [disabled]="uploadingSlot() === slot.name"
+                >
+                  <mat-icon>cloud_upload</mat-icon>
+                  {{ uploadingSlot() === slot.name ? 'Uploading…' : (donationSlotAsset(slot.name) ? 'Replace PDF' : 'Upload PDF') }}
                 </button>
               </div>
             </div>

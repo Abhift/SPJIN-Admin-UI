@@ -34,6 +34,7 @@ export const PAGE_SECTION_TYPES = [
   'videos-banner',
   'patrika-banner',
   'home-swami-ji',
+  'university-prospectus',
 ] as const;
 
 export type PageSectionType = (typeof PAGE_SECTION_TYPES)[number];
