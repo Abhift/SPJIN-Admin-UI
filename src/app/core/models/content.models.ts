@@ -95,6 +95,8 @@ export interface Book {
   trendingText?: string;
   coverImageUrl?: string;
   fileUrl?: string;
+  /** Drives the highlighted e-book below the hero on the public home page. */
+  featured?: boolean;
   status: ContentStatus;
   createdAt?: string;
   updatedAt?: string;
@@ -110,6 +112,8 @@ export interface BookRequest {
   trendingText?: string;
   coverImageUrl?: string;
   fileUrl?: string;
+  /** Drives the highlighted e-book below the hero on the public home page. */
+  featured?: boolean;
   status: ContentStatus;
 }
 

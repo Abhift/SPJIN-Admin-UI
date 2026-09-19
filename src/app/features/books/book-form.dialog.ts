@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ContentApi } from '../../core/services/content-api.service';
 import { MediaService } from '../../core/services/media.service';
 import { NotificationService } from '../../core/services/notification.service';
@@ -32,6 +33,7 @@ import { compressImage, validateImageSize, validateFileSize, formatFileSize } fr
     MatIconModule,
     MatTooltipModule,
     MatProgressBarModule,
+    MatSlideToggleModule,
     SectionLogsComponent,
     MediaUrlPipe,
   ],
@@ -87,6 +89,18 @@ import { compressImage, validateImageSize, validateFileSize, formatFileSize } fr
           <input matInput formControlName="trendingText" placeholder="e.g. Today's Deal, New Arrival, Bestseller" />
           <mat-hint>Leave blank to hide the badge.</mat-hint>
         </mat-form-field>
+
+        <!-- Drives the highlighted e-book below the hero on the public home page.
+             The site shows the newest featured book, so turning this on for a new
+             book replaces whichever one is highlighted now. -->
+        <div class="featured-toggle">
+          <mat-slide-toggle formControlName="featured">
+            Highlight on home page
+          </mat-slide-toggle>
+          <p class="featured-hint">
+            Shows this book as the featured e-book below the hero. Needs a cover image and a PDF.
+          </p>
+        </div>
 
         <!-- Cover image upload -->
         <div class="cover-section">
@@ -164,6 +178,8 @@ import { compressImage, validateImageSize, validateFileSize, formatFileSize } fr
     <style>
       .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
       .full-width { width: 100%; }
+      .featured-toggle { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 18px; }
+      .featured-hint { margin: 0; font-size: 12px; color: rgba(0,0,0,0.6); }
       .cover-section { display: flex; flex-direction: column; gap: 10px; margin: 8px 0 16px; }
       .cover-label { font-size: 12px; color: rgba(0,0,0,0.6); font-weight: 500; }
       .cover-preview { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
@@ -205,6 +221,7 @@ export class BookFormDialog {
     trendingText: [this.data?.trendingText ?? ''],
     coverImageUrl: [this.data?.coverImageUrl ?? ''],
     fileUrl: [this.data?.fileUrl ?? ''],
+    featured: [this.data?.featured ?? false],
   });
 
   constructor() {
@@ -296,6 +313,7 @@ export class BookFormDialog {
       trendingText: raw.trendingText || undefined,
       coverImageUrl: raw.coverImageUrl.trim() || undefined,
       fileUrl: raw.fileUrl.trim() || undefined,
+      featured: raw.featured,
     };
     const req = this.data ? this.api.books.update(this.data.id, body) : this.api.books.create(body);
     req.subscribe({

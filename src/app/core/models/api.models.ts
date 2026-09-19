@@ -15,6 +15,7 @@ export type ContentStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'SCHEDULED';
 export const PAGE_SECTION_TYPES = [
   'general',
   'hero',
+  'featured-ebook',
   'pages',
   'articles',
   'books',
