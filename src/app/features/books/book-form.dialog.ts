@@ -139,6 +139,12 @@ import { compressImage, validateImageSize, validateFileSize, formatFileSize } fr
               }
             </div>
           }
+
+          <mat-form-field class="full-width" appearance="outline">
+            <mat-label>Or paste image URL</mat-label>
+            <input matInput formControlName="coverImageUrl" placeholder=" Add image path here..." />
+            <mat-icon matSuffix>link</mat-icon>
+          </mat-form-field>
         </div>
 
         <!-- PDF upload -->
@@ -180,7 +186,7 @@ import { compressImage, validateImageSize, validateFileSize, formatFileSize } fr
       .full-width { width: 100%; }
       .featured-toggle { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 18px; }
       .featured-hint { margin: 0; font-size: 12px; color: rgba(0,0,0,0.6); }
-      .cover-section { display: flex; flex-direction: column; gap: 10px; margin: 8px 0 16px; }
+      .cover-section { display: flex; flex-direction: column; gap: 10px; margin: 8px 0 4px; }
       .cover-label { font-size: 12px; color: rgba(0,0,0,0.6); font-weight: 500; }
       .cover-preview { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
       .cover-thumb { width: 120px; height: 160px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(0,0,0,0.12); }
